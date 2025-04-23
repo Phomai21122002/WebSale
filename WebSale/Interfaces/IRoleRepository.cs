@@ -4,13 +4,13 @@ namespace WebSale.Interfaces
 {
     public interface IRoleRepository
     {
-        ICollection<Role> GetRoles();
-        Role GetRole(int roleId);
-        bool CreateRole(Role role);
-        bool UpdateRole(Role role);
-        bool DeleteRole(Role role);
-        bool Save();
-        bool RoleExists(string nameRole);
-        bool RoleIdExists(int idRole);
+        Task<ICollection<Role>> GetRoles();
+        Task<Role> GetRole(int roleId);
+        Task<bool> CreateRole(Role role);
+        Task<bool> UpdateRole(Role role);
+        Task<bool> DeleteRole(Role role);
+        Task<bool> Save();
+        Task<bool> RoleExists(string nameRole);
+        Task<bool> RoleIdExists(int idRole);
     }
 }

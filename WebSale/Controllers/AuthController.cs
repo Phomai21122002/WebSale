@@ -96,7 +96,7 @@ namespace WebSale.Controllers
             registrationDto.Password = HashPassword.HashPass(registrationDto.Password);
 
             var userMap = _mapper.Map<User>(registrationDto);
-            userMap.Role = _roleRepository.GetRole(idRole);
+            userMap.Role = await _roleRepository.GetRole(idRole);
 
             if (!await _userRepository.CreateUser(userMap))
             {

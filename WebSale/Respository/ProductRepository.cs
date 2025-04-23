@@ -7,6 +7,10 @@ using System.Threading.Tasks;
 using System.Linq;
 using System.Text.Json.Serialization;
 using System.Text.Json;
+using WebSale.Dto.ProductDetails;
+using Azure;
+using WebSale.Dto.Products;
+using WebSale.Dto.Categories;
 
 namespace WebSale.Respository
 {
@@ -39,9 +43,37 @@ namespace WebSale.Respository
             return await _dataContext.Products.Include(p => p.ImageProducts).Include(p => p.Category).Include(p => p.ProductDetail).FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<ICollection<Product>> GetProducts()
+        public async Task<ICollection<ProductResultDto>> GetProducts()
         {
-            return await _dataContext.Products.Include(p => p.ImageProducts).ToListAsync();
+
+            var resProducts = await _dataContext.Products
+                .Include(p => p.ImageProducts)
+                .Include(p => p.Category)
+                    .ThenInclude(c => c.ImageCategories)
+                .Include(p => p.ProductDetail)
+                .ToListAsync();
+
+            var resultProduct = resProducts.Select(resProduct => new ProductResultDto
+            {
+                Id = resProduct?.Id ?? 0,
+                Name = resProduct?.Name,
+                Price = resProduct?.Price ?? 0,
+                Urls = resProduct?.ImageProducts?.Select(ip => ip.Url).ToList(),
+                Decription = resProduct?.ProductDetail?.Decription,
+                DescriptionDetail = resProduct?.ProductDetail?.DescriptionDetail,
+                Quantity = resProduct?.ProductDetail?.Quantity ?? 0,
+                Tag = resProduct?.ProductDetail?.Tag,
+                Sold = resProduct?.ProductDetail?.Sold ?? 0,
+                Slug = resProduct?.Slug,
+                category = resProduct?.Category == null ? null : new CategoryDto
+                {
+                    Id = resProduct.Category.Id,
+                    Name = resProduct.Category.Name,
+                    Description = resProduct.Category.Description,
+                    Urls = resProduct?.Category?.ImageCategories?.Select(ic => ic.Url).ToList()
+                }
+            }).ToList();
+            return resultProduct;
         }
 
         public async Task<bool> ProductExists(int id)
@@ -65,5 +97,36 @@ namespace WebSale.Respository
             return await _dataContext.Products.AnyAsync(p => p.Slug == slug);
         }
 
+        public async Task<ProductResultDto?> GetProductResult(int id)
+        {
+            var resProduct = await _dataContext.Products
+                .Include(p => p.ImageProducts)
+                .Include(p => p.Category)
+                    .ThenInclude(c => c.ImageCategories)
+                .Include(p => p.ProductDetail)
+                .FirstOrDefaultAsync(p => p.Id == id);
+            var resultProduct = new ProductResultDto
+            {
+                Id = resProduct?.Id ?? 0,
+                Name = resProduct?.Name,
+                Price = resProduct?.Price ?? 0,
+                Urls = resProduct?.ImageProducts?.Select(ip => ip.Url).ToList(),
+                Decription = resProduct?.ProductDetail?.Decription,
+                DescriptionDetail = resProduct?.ProductDetail?.DescriptionDetail,
+                Quantity = resProduct?.ProductDetail?.Quantity ?? 0,
+                Tag = resProduct?.ProductDetail?.Tag,
+                Sold = resProduct?.ProductDetail?.Sold ?? 0,
+                Slug = resProduct?.Slug,
+                category = resProduct?.Category == null ? null : new CategoryDto
+                {
+                    Id = resProduct.Category.Id,
+                    Name = resProduct.Category.Name,
+                    Description = resProduct.Category.Description,
+                    Urls = resProduct?.Category?.ImageCategories?.Select(ic => ic.Url).ToList()
+                }
+            };
+
+            return resultProduct;
+        }
     }
 }

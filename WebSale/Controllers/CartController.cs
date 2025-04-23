@@ -129,7 +129,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var resultCreateCart = await _cartRepository.GetCart(userId, newCart.Id);
+                var resultCreateCart = await _cartRepository.GetCartByUserId(userId, newCart.Id);
                 return Ok(resultCreateCart);
             }
             catch (Exception ex)
@@ -162,6 +162,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
                 cart.Quantity = cartUpdateDto.Quantity;
+                cart.UpdatedAt = DateTime.Now;
 
                 if (!await _cartRepository.UpdateCart(cart))
                 {
@@ -169,7 +170,7 @@ namespace WebSale.Controllers
                     status.Message = "Something went wrong while updating cart";
                     return BadRequest(status);
                 }
-                var resultUpdateCart = await _cartRepository.GetCart(userId, cart.Id);
+                var resultUpdateCart = await _cartRepository.GetCartByUserId(userId, cart.Id);
                 return Ok(resultUpdateCart);
             }
             catch (Exception ex)

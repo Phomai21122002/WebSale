@@ -40,7 +40,7 @@ namespace WebSale.Controllers
                 status.Message = "Product not exists";
                 return BadRequest(status);
             }
-            var product = await _productRepository.GetProduct(productId);
+            var product = await _productRepository.GetProductResult(productId);
             return Ok(product);
         }
 
@@ -112,7 +112,7 @@ namespace WebSale.Controllers
                     }
                 }
 
-                return Ok(await _productRepository.GetProduct(newProduct.Id));
+                return Ok(await _productRepository.GetProductResult(newProduct.Id));
             }
             catch (Exception ex) {
                 status.StatusCode = 500;
@@ -182,7 +182,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                return Ok(await _productRepository.GetProduct(productId));
+                return Ok(await _productRepository.GetProductResult(productId));
             }
             catch (Exception ex)
             {
@@ -224,28 +224,28 @@ namespace WebSale.Controllers
             }
         }
 
-        [HttpDelete("soft-delete")]
-        public async Task<IActionResult> DelelteSoftProduct([FromQuery] int productId)
-        {
-            var status = new Status();
-            try
-            {
-                if (!await _productRepository.ProductExists(productId))
-                {
-                    status.StatusCode = 402;
-                    status.Message = "Product does not exists";
-                    return BadRequest(status);
-                }
-                var product = await _productRepository.GetProduct(productId);
+        //[HttpDelete("soft-delete")]
+        //public async Task<IActionResult> DelelteSoftProduct([FromQuery] int productId)
+        //{
+        //    var status = new Status();
+        //    try
+        //    {
+        //        if (!await _productRepository.ProductExists(productId))
+        //        {
+        //            status.StatusCode = 402;
+        //            status.Message = "Product does not exists";
+        //            return BadRequest(status);
+        //        }
+        //        var product = await _productRepository.GetProduct(productId);
 
-                return Ok(await _productRepository.GetProduct(productId));
-            }
-            catch (Exception ex)
-            {
-                status.StatusCode = 500;
-                status.Message = $"Internal Server Error: {ex.Message}";
-                return BadRequest(status);
-            }
-        }
+        //        return Ok(await _productRepository.GetProduct(productId));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        status.StatusCode = 500;
+        //        status.Message = $"Internal Server Error: {ex.Message}";
+        //        return BadRequest(status);
+        //    }
+        //}
     }
 }

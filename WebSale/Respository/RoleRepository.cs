@@ -1,4 +1,5 @@
-﻿using WebSale.Data;
+﻿using Microsoft.EntityFrameworkCore;
+using WebSale.Data;
 using WebSale.Interfaces;
 using WebSale.Models;
 
@@ -11,44 +12,43 @@ namespace WebSale.Respository
         public RoleRepository(DataContext context) {
             _context = context;
         }
-        public bool CreateRole(Role role)
+        public async Task<bool> CreateRole(Role role)
         {
-            _context.Add(role);
-            return Save();
+            await _context.AddAsync(role);
+            return await Save();
         }
 
-        public Role GetRole(int roleId)
+        public async Task<Role> GetRole(int roleId)
         {
-            return _context.Roles.Where(r => r.Id ==  roleId).FirstOrDefault();
+            return await _context.Roles.Where(r => r.Id ==  roleId).FirstOrDefaultAsync();
         }
 
-        public ICollection<Role> GetRoles()
+        public async Task<ICollection<Role>> GetRoles()
         {
-            return _context.Roles.ToList();
+            return await _context.Roles.ToListAsync();
         }
 
-        public bool Save()
+        public async Task<bool> Save()
         {
-            var role = _context.SaveChanges();
-            return role > 0 ? true : false;
+            return await _context.SaveChangesAsync() > 0;
         }
 
-        public bool RoleExists(string nameRole) {
-            return _context.Roles.Any(r => r.Name.Trim().ToLower() == nameRole.Trim().ToLower());
+        public async Task<bool> RoleExists(string nameRole) {
+            return await _context.Roles.AnyAsync(r => r.Name.Trim().ToLower() == nameRole.Trim().ToLower());
         }
 
-        public bool RoleIdExists(int idRole)
+        public async Task<bool> RoleIdExists(int idRole)
         {
-            return _context.Roles.Any(r => r.Id == idRole);
+            return await _context.Roles.AnyAsync(r => r.Id == idRole);
         }
 
-        public bool UpdateRole(Role role)
+        public async Task<bool> UpdateRole(Role role)
         {
             _context.Update(role);
-            return Save();
+            return await Save();
         }
 
-        public bool DeleteRole(Role role)
+        public Task<bool> DeleteRole(Role role)
         {
             _context.Remove(role);
             return Save();

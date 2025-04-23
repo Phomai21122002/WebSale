@@ -85,19 +85,37 @@ builder.Services.AddAuthentication(options =>
     };
 });
 
+builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
+//app.UseCors(options =>
+//            options.WithOrigins("*")
+//            .AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+//app.UseCors(options =>
+//    options.WithOrigins("http://localhost:3000")
+//           .AllowAnyMethod()
+//           .AllowAnyHeader());
+
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000")
+              .AllowAnyMethod()
+              .AllowAnyHeader();
+    });
+});
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.UseSwagger();
-    app.UseSwaggerUI();
-}
+//if (app.Environment.IsDevelopment())
+//{
+app.UseSwagger();
+app.UseSwaggerUI();
+//}
 
 app.UseHttpsRedirection();
-app.UseCors(options =>
-            options.WithOrigins("*")
-            .AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
+
+app.UseCors("AllowSpecificOrigin");
 app.UseAuthentication();
 app.UseAuthorization();
 

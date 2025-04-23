@@ -29,7 +29,7 @@ namespace WebSale.Controllers
                 return BadRequest(status);
             }
 
-            if (_roleRepository.RoleExists(roleDto.Name)) {
+            if (await _roleRepository.RoleExists(roleDto.Name)) {
                 status.StatusCode = 422;
                 status.Message = "Role already exists";
                 return BadRequest(status);
@@ -37,7 +37,7 @@ namespace WebSale.Controllers
 
             var roleMap = _mapper.Map<Role>(roleDto);
 
-            if (!_roleRepository.CreateRole(roleMap)) {
+            if (!await _roleRepository.CreateRole(roleMap)) {
                 status.StatusCode = 500;
                 status.Message = "Something went wrong with creating";
                 return BadRequest(status);
@@ -49,7 +49,7 @@ namespace WebSale.Controllers
         [HttpGet("roles")]
         public async Task<IActionResult> GetRoles()
         {
-            var role = _roleRepository.GetRoles();
+            var role = await _roleRepository.GetRoles();
             return Ok(role);
         }
 
@@ -58,19 +58,19 @@ namespace WebSale.Controllers
         {
             var status = new Status();
 
-            if (!_roleRepository.RoleIdExists(idRole))
+            if (!await _roleRepository.RoleIdExists(idRole))
             {
                 status.StatusCode = 402;
                 status.Message = "Role not exists";
                 return BadRequest(status);
             }
 
-            var role = _roleRepository.GetRole(idRole);
+            var role = await _roleRepository.GetRole(idRole);
             return Ok(role);
         }
 
         [HttpPut("role")]
-        public async Task<IActionResult> UpdateRole([FromQuery] int idRole, [FromBody] Role roleUpdate)
+        public async Task<IActionResult> UpdateRole([FromQuery] int idRole, [FromBody] RoleUpdateDto roleUpdate)
         {
             var status = new Status();
 
@@ -81,20 +81,24 @@ namespace WebSale.Controllers
                 return BadRequest(status);
             }
 
-            if (!_roleRepository.RoleIdExists(idRole))
+            if (!await _roleRepository.RoleIdExists(idRole))
             {
                 status.StatusCode = 402;
                 status.Message = "Role not exists";
                 return BadRequest(status);
             }
 
-            if(!_roleRepository.UpdateRole(roleUpdate))
+            var roleMap = _mapper.Map<Role>(roleUpdate);
+            roleMap.UpdatedAt = DateTime.Now;
+
+            if(!await _roleRepository.UpdateRole(roleMap))
             {
                 status.StatusCode = 500;
                 status.Message = "Something went wrong updating Role";
                 return BadRequest(status);
             }
-            return Ok(roleUpdate);
+            var roleUpdated = await _roleRepository.GetRole(idRole);
+            return Ok(roleUpdated);
         }
 
         [HttpDelete("role")]
@@ -102,19 +106,21 @@ namespace WebSale.Controllers
         {
             var status = new Status();
 
-            if (!_roleRepository.RoleIdExists(idRole))
+            if (!await _roleRepository.RoleIdExists(idRole))
             {
                 status.StatusCode = 402;
                 status.Message = "Role not exists";
                 return BadRequest(status);
             }
 
-            var role = _roleRepository.GetRole(idRole);
+            var role = await _roleRepository.GetRole(idRole);
+            role.DeletedAt = DateTime.Now;
 
-            if (!_roleRepository.UpdateRole(role))
+
+            if (!await _roleRepository.DeleteRole(role))
             {
                 status.StatusCode = 500;
-                status.Message = "Something went wrong updating Role";
+                status.Message = "Something went wrong deleting Role";
                 return BadRequest(status);
             }
             return Ok(role);

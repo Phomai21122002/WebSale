@@ -13,6 +13,7 @@ namespace WebSale.Helper
         public MappingProfiles() {
             CreateMap<RegisterDto, User>();
             CreateMap<RoleDto, Role>();
+            CreateMap<RoleUpdateDto, Role>();
             CreateMap<UserBaseDto, User>();
             CreateMap<CategoryBase, Category>();
             CreateMap<CategoryDto, Category>();

@@ -1,0 +1,20 @@
+
+{
+    "region" : "eu-west-1",
+    "profile" : "Websale",
+    "configuration" : "Release",
+    "framework"     : "net8.0",
+    "function-name" : "OnlineSnackSale",
+    "package-type"  : "Zip",
+    "function-handler" : "WebSale",
+    "function-memory-size" : 256,
+    "function-role"        : "arn:aws:iam::543175498665:role/service-role/Websale-role-m2irt7kd",
+    "function-timeout"     : 10,
+    "function-runtime"     : "dotnet8",
+    "function-architecture" : "x86_64",
+    "function-subnets"      : "",
+    "function-security-groups" : "",
+    "tracing-mode"             : "PassThrough",
+    "environment-variables"    : "",
+    "image-tag"                : ""
+}
