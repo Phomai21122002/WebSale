@@ -44,6 +44,23 @@ namespace WebSale.Controllers
             return Ok(product);
         }
 
+        [HttpGet("productBySlug")]
+        public async Task<IActionResult> GetProductBySlug([FromQuery] string slugProduct)
+        {
+            var status = new Status();
+
+            if (!await _productRepository.SlugExists(slugProduct))
+            {
+                status.StatusCode = 402;
+                status.Message = "Product not exists";
+                return BadRequest(status);
+            }
+            var productId = await _productRepository.GetIdProductBySlug(slugProduct);
+            var product = await _productRepository.GetProductResult(productId.Value);
+
+            return Ok(product);
+        }
+
         [HttpGet("products")]
         public async Task<IActionResult> GetProducts()
         {

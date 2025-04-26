@@ -113,23 +113,39 @@ namespace WebSale.Controllers
 
                 var user = await _userRepository.GetUser(userId);
                 var product = await _productRepository.GetProduct(cartDto.ProductId);
+                var cart = await _cartRepository.GetCartByIdProduct(userId, cartDto.ProductId);
 
-                var cartMap = new Cart
+                if (cart == null) {
+                    var cartMap = new Cart
+                    {
+                        Quantity = cartDto.Quantity,
+                        User = user,
+                        Product = product
+                    };
+
+                    cart = await _cartRepository.CreateCart(cartMap);
+
+                    if (cart == null)
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while creating cart";
+                        return BadRequest(status);
+                    }
+                }
+                else
                 {
-                    Quantity = cartDto.Quantity,
-                    User = user,
-                    Product = product
-                };
+                    cart.Quantity += cartDto.Quantity;
+                    cart.UpdatedAt = DateTime.Now;
 
-                var newCart = await _cartRepository.CreateCart(cartMap);
-
-                if (newCart == null) {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while creating cart";
-                    return BadRequest(status);
+                    if (!await _cartRepository.UpdateCart(cart))
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while updating cart";
+                        return BadRequest(status);
+                    }
                 }
 
-                var resultCreateCart = await _cartRepository.GetCartByUserId(userId, newCart.Id);
+                var resultCreateCart = await _cartRepository.GetCartByUserId(userId, cart.Id);
                 return Ok(resultCreateCart);
             }
             catch (Exception ex)

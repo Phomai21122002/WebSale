@@ -7,6 +7,7 @@ namespace WebSale.Interfaces
     {
         Task<ICollection<ProductResultDto>> GetProducts();
         Task<Product?> GetProduct(int id);
+        Task<int?> GetIdProductBySlug(string slug);
         Task<ProductResultDto?> GetProductResult(int id);
         Task<Product> CreateProduct(Product product);
         Task<bool> UpdateProduct(Product product);

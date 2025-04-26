@@ -128,5 +128,10 @@ namespace WebSale.Respository
 
             return resultProduct;
         }
+
+        public async Task<int?> GetIdProductBySlug(string slug)
+        {
+            return await _dataContext.Products.Where(p => p.Slug == slug).Select(p => p.Id).FirstOrDefaultAsync();
+        }
     }
 }

@@ -9,6 +9,7 @@ namespace WebSale.Interfaces
     {
         Task<ICollection<Cart>> GetCarts(string userId);
         Task<Cart?> GetCart(string userId, int cartId);
+        Task<Cart?> GetCartByIdProduct(string userId, int productId);
         Task<CartDetailDto> GetCartByUserId(string userId, int cartId);
         Task<ICollection<CartDetailDto>> GetCartsByUserId(string userId);
         Task<ICollection<Cart>> GetCartsByCartsId(string userId, CreateOrderDto createOrderDtos);

@@ -46,6 +46,11 @@ namespace WebSale.Respository
             return await _dataContext.Carts.Where(c => c.Id == cartId && c.User != null && c.User.Id == userId).Include(c => c.User).Include(c => c.Product).FirstOrDefaultAsync();
         }
 
+        public async Task<Cart?> GetCartByIdProduct(string userId, int productId)
+        {
+            return await _dataContext.Carts.Where(c => c.Product != null && c.Product.Id == productId && c.User != null && c.User.Id == userId).Include(c => c.User).Include(c => c.Product).FirstOrDefaultAsync();
+        }
+
         public async Task<ICollection<Cart>> GetCartsByCartsId(string userId, CreateOrderDto createOrderDtos)
         {
             var cartRes = await _dataContext.Carts
@@ -76,6 +81,7 @@ namespace WebSale.Respository
             var resultCart = new CartDetailDto
             {
                 Id = cartRes.Id,
+                Total = cartRes.Quantity * cartRes.Product?.Price ?? 0,
                 products = new ProductDetailResultDto
                 {
                     Id = cartRes.Product?.Id ?? 0,
@@ -123,6 +129,7 @@ namespace WebSale.Respository
             var resultCart = cartRes.Select(cp => new CartDetailDto
             {
                 Id = cp.Id,
+                Total = cp.Quantity * cp.Product?.Price ?? 0,
                 products = new ProductDetailResultDto
                 {
                     Id = cp.Product?.Id ?? 0,
