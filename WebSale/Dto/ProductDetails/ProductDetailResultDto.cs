@@ -13,5 +13,7 @@ namespace WebSale.Dto.ProductDetails
         public long Price { get; set; }
         [Required]
         public List<string>? Urls { get; set; }
+        [Required]
+        public string? Slug { get; set; }
     }
 }

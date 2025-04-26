@@ -92,7 +92,8 @@ namespace WebSale.Respository
                     DescriptionDetail = cartRes.Product?.ProductDetail?.DescriptionDetail,
                     Quantity = cartRes.Quantity,
                     Tag = cartRes.Product?.ProductDetail?.Tag,
-                    Sold = cartRes.Product?.ProductDetail?.Sold ?? 0
+                    Sold = cartRes.Product?.ProductDetail?.Sold ?? 0,
+                    Slug = cartRes.Product.Slug
                 },
                 category = cartRes.Product?.Category == null ? null : new CategoryDto
                 {
@@ -140,7 +141,8 @@ namespace WebSale.Respository
                     DescriptionDetail = cp.Product?.ProductDetail?.DescriptionDetail,
                     Quantity = cp.Quantity,
                     Tag = cp.Product?.ProductDetail?.Tag,
-                    Sold = cp.Product?.ProductDetail?.Sold ?? 0
+                    Sold = cp.Product?.ProductDetail?.Sold ?? 0,
+                    Slug = cp.Product.Slug
                 },
                 category = cp.Product?.Category == null ? null : new CategoryDto
                 {
