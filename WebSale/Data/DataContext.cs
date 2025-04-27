@@ -23,6 +23,9 @@ namespace WebSale.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<UserAddress> UserAddresses { get; set; }
+        public DbSet<Provinces> Provinces { get; set; }
+        public DbSet<District> Districts { get; set; }
+        public DbSet<Ward> Wards { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -66,6 +69,18 @@ namespace WebSale.Data
                 .HasOne(p => p.ProductDetail)
                 .WithOne(pd => pd.Product)
                 .HasForeignKey<Product>(p => p.ProductDetailId);
+
+            modelBuilder.Entity<Provinces>()
+                .HasMany(p => p.Districts)
+                .WithOne(u => u.Provinces)
+                .HasForeignKey(d => d.ParentCode)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<District>()
+                .HasMany(d => d.Wards)
+                .WithOne(w => w.District)
+                .HasForeignKey(w => w.ParentCode)
+                .OnDelete(DeleteBehavior.Cascade);
         }
     }
 }

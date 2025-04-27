@@ -115,6 +115,62 @@ namespace WebSale.Migrations
                     b.ToTable("Categories");
                 });
 
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
+
+                    b.Property<string>("ParentCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "parent_code");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path");
+
+                    b.Property<string>("Path_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path_with_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("ParentCode");
+
+                    b.ToTable("Districts");
+                });
+
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
                 {
                     b.Property<int>("Id")
@@ -395,6 +451,42 @@ namespace WebSale.Migrations
                     b.ToTable("ProductDetails");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Provinces", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
+
+                    b.HasKey("Code");
+
+                    b.ToTable("Provinces");
+                });
+
             modelBuilder.Entity("WebSale.Models.Role", b =>
                 {
                     b.Property<int>("Id")
@@ -463,6 +555,10 @@ namespace WebSale.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.HasKey("Id");
 
                     b.HasIndex("RoleId");
@@ -497,6 +593,62 @@ namespace WebSale.Migrations
                     b.ToTable("UserAddresses");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Ward", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
+
+                    b.Property<string>("ParentCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "parent_code");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path");
+
+                    b.Property<string>("Path_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path_with_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("ParentCode");
+
+                    b.ToTable("Wards");
+                });
+
             modelBuilder.Entity("WebSale.Models.Cart", b =>
                 {
                     b.HasOne("WebSale.Models.Product", "Product")
@@ -514,6 +666,17 @@ namespace WebSale.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.HasOne("WebSale.Models.Provinces", "Provinces")
+                        .WithMany("Districts")
+                        .HasForeignKey("ParentCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Provinces");
                 });
 
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
@@ -631,6 +794,17 @@ namespace WebSale.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Ward", b =>
+                {
+                    b.HasOne("WebSale.Models.District", "District")
+                        .WithMany("Wards")
+                        .HasForeignKey("ParentCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("District");
+                });
+
             modelBuilder.Entity("WebSale.Models.Address", b =>
                 {
                     b.Navigation("UserAddresses");
@@ -641,6 +815,11 @@ namespace WebSale.Migrations
                     b.Navigation("ImageCategories");
 
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.Navigation("Wards");
                 });
 
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
@@ -667,6 +846,11 @@ namespace WebSale.Migrations
             modelBuilder.Entity("WebSale.Models.ProductDetail", b =>
                 {
                     b.Navigation("Product");
+                });
+
+            modelBuilder.Entity("WebSale.Models.Provinces", b =>
+                {
+                    b.Navigation("Districts");
                 });
 
             modelBuilder.Entity("WebSale.Models.User", b =>

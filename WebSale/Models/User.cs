@@ -20,6 +20,8 @@ namespace WebSale.Models
         [Required]
         [StringLength(255)]
         public string? Password { get; set; }
+        [Required]
+        public string? url { get; set; }
         [Phone]
         public long? Phone {  get; set; }
         public ICollection<UserAddress>? UserAddresses { get; set; }

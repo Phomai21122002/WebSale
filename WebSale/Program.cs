@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -31,6 +32,7 @@ builder.Services.AddScoped<IImageProductRepository, ImageProductRepository>();
 builder.Services.AddScoped<IProductDetailRepository, ProductDetailRepository>();
 builder.Services.AddScoped<IOrderProductRepository, OrderProductRespository>();
 builder.Services.AddScoped<IImageFeedBackRepository, ImageFeedBackRepository>();
+builder.Services.AddScoped<AddressDataSeeder>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -105,6 +107,15 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var seeder = services.GetRequiredService<AddressDataSeeder>();
+    seeder.SeedProvinces("Files/thanh-pho");
+    seeder.SeedDistricts("Files/quan-huyen");
+    seeder.SeedWards("Files/xa-phuong");
+}
 
 // Configure the HTTP request pipeline.
 //if (app.Environment.IsDevelopment())
