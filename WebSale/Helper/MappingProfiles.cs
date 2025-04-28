@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using WebSale.Dto.Addresses;
 using WebSale.Dto.Auth;
 using WebSale.Dto.Categories;
 using WebSale.Dto.ProductDetails;
@@ -20,6 +21,7 @@ namespace WebSale.Helper
             CreateMap<ProductDetailDto, ProductDetail>();
             CreateMap<ProductDetailDto, Product>();
             CreateMap<Product, ProductDetail>();
+            CreateMap<AddressCreateDto, Address>();
         }
     }
 }

@@ -32,6 +32,8 @@ builder.Services.AddScoped<IImageProductRepository, ImageProductRepository>();
 builder.Services.AddScoped<IProductDetailRepository, ProductDetailRepository>();
 builder.Services.AddScoped<IOrderProductRepository, OrderProductRespository>();
 builder.Services.AddScoped<IImageFeedBackRepository, ImageFeedBackRepository>();
+builder.Services.AddScoped<IAddressRepository, AddressRepository>();
+builder.Services.AddScoped<IAddressUserRepository, AddressUserRepository>();
 builder.Services.AddScoped<AddressDataSeeder>();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>

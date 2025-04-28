@@ -27,7 +27,7 @@ namespace WebSale.Respository
 
         public async Task<User?> GetUser(string userId)
         {
-            return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses).Where(u => u.Id == userId).FirstOrDefaultAsync();
+            return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses.Where(ud => ud.IsDefault)).Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 
         public async Task<ICollection<User>> GetUsers()
