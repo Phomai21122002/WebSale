@@ -89,6 +89,7 @@ namespace WebSale.Controllers
                 }
 
                 var productDetail = _mapper.Map<ProductDetail>(productDetailDto);
+                productDetail.Sold = 0;
 
                 var newProductDetail = await _productDetailRepository.CreateProductDetail(productDetail);
                 if (newProductDetail == null)

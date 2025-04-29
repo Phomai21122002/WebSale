@@ -53,7 +53,7 @@ namespace WebSale.Controllers
             }
         }
 
-        [HttpGet("provinves")]
+        [HttpGet("provinces")]
         public async Task<IActionResult> GetProvinces([FromQuery] string inputUserId)
         {
             var status = new Status();

@@ -7,7 +7,7 @@ namespace WebSale.Models
         [Key]
         public int Id { get; set; }
         [MaxLength(1000)]
-        public string? Decription { get; set; }
+        public string? Description { get; set; }
         public string? DescriptionDetail { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
@@ -17,6 +17,7 @@ namespace WebSale.Models
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Sold must be non-negative")]
         public int Sold { get; set; }
+        public DateTime? ExpiryDate { get; set; }
         public Product? Product { get; set; }
     }
 }
