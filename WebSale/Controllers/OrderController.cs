@@ -127,6 +127,7 @@ namespace WebSale.Controllers
                 var order = new Order
                 {
                     Name = $"Order_{DateTime.Now:yyyyMMddHHmmss}",
+                    CountProduct = carts.Sum(cart => cart.Quantity),
                     Total = carts.Sum(cart => cart.Quantity * (cart.Product?.Price ?? 0)),
                     Status = (int)OrderStatus.Pending,
                     User = user,

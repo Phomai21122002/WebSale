@@ -11,9 +11,12 @@ namespace WebSale.Models
         public string? Name { get; set; }
         [Required]
         [Range(0, long.MaxValue)]
-        public long Total { get; set; }
+        public int CountProduct { get; set; }
         [Required]
         public int? Status { get; set; }
+        [Required]
+        [Range(0, long.MaxValue)]
+        public long Total { get; set; }
         public ICollection<OrderProduct>? OrderProducts { get; set; }
         public User? User { get; set; }
     }

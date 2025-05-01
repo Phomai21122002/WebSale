@@ -1,10 +1,11 @@
-﻿using WebSale.Models;
+﻿using WebSale.Dto.Categories;
+using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface ICategoryRepository
     {
-        Task<ICollection<Category>> GetCategories();
+        Task<ICollection<CategoryResultDto>> GetCategories();
         Task<Category?> GetCategory(int id);
         Task<Category> CreateCategory(Category category);
         Task<Category> UpdateCategory(Category category);

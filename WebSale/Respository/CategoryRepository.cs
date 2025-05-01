@@ -4,6 +4,7 @@ using WebSale.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using WebSale.Dto.Categories;
 
 namespace WebSale.Respository
 {
@@ -46,9 +47,15 @@ namespace WebSale.Respository
             return await Save();
         }
 
-        public async Task<ICollection<Category>> GetCategories()
+        public async Task<ICollection<CategoryResultDto>> GetCategories()
         {
-            return await _dataContext.Categories.Include(c => c.ImageCategories).AsNoTracking().ToListAsync();
+            return await _dataContext.Categories.Select(c => new CategoryResultDto {
+                Id = c.Id,
+                Name = c.Name,
+                Description = c.Description,
+                CountProduct = c.Products!.Count(),
+                ImageCategories = c.ImageCategories,
+            }).ToListAsync();
         }
 
         public async Task<Category?> GetCategory(int id)
