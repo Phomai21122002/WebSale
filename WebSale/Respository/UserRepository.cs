@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebSale.Data;
+using WebSale.Dto.Addresses;
 using WebSale.Interfaces;
 using WebSale.Models;
 
@@ -54,5 +55,32 @@ namespace WebSale.Respository
         {
             return await _context.SaveChangesAsync() > 0;
         }
+
+        public async Task<UserResultDto?> GetResultUser(string userId)
+        {
+            return await _context.Users
+                .Where(u => u.Id == userId)
+                .Select(u => new UserResultDto
+                {
+                    Id = u.Id,
+                    Email = u.Email,
+                    FirstName = u.FirstName,
+                    LastName = u.LastName,
+                    Phone = u.Phone,
+                    url = u.url,
+                    Addresses = u.UserAddresses!
+                        .Select(ud => new AddressDto
+                        {
+                            Id = ud.Address!.Id,
+                            Name = ud.Address!.Name!,
+                            Code = ud.Address.Code,
+                            IsDefault = ud.IsDefault
+                        })
+                        .ToList(),
+                    Role = u.Role
+                })
+                .FirstOrDefaultAsync();
+        }
+
     }
 }

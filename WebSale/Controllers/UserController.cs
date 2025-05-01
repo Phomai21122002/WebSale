@@ -62,7 +62,7 @@ namespace WebSale.Controllers
                 status.Message = "User not exists";
                 return BadRequest(status);
             }
-            var user = await _userRepository.GetUser(idUser);
+            var user = await _userRepository.GetResultUser(idUser);
             return Ok(user);
         }
 

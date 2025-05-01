@@ -16,5 +16,6 @@ namespace WebSale.Dto.Users
         [Required]
         [Range(1000000000, 9999999999, ErrorMessage = "Phone must be a valid 10-digit number.")]
         public long? Phone { get; set; }
+        public string? url { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using WebSale.Models;
+﻿using WebSale.Dto.Addresses;
+using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
@@ -6,6 +7,7 @@ namespace WebSale.Interfaces
     {
         Task<ICollection<User>> GetUsers();
         Task<User?> GetUser(string userId);
+        Task<UserResultDto?> GetResultUser(string userId);
         Task<bool> UserExists(string userId);
         Task<bool> CreateUser(User user);
         Task<bool> UpdateUser(User user);

@@ -1,12 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using WebSale.Models;
 
-namespace WebSale.Models
+namespace WebSale.Dto.Addresses
 {
-    public class User : BaseTime
+    public class UserResultDto
     {
         [Key]
         [StringLength(255)]
-        public string Id { get; set; } = Guid.NewGuid().ToString();
+        public string? Id { get; set; }
         [Required]
         [EmailAddress]
         [StringLength(255)]
@@ -18,17 +19,10 @@ namespace WebSale.Models
         [StringLength(100)]
         public string? LastName { get; set; }
         [Required]
-        [StringLength(255)]
-        public string? Password { get; set; }
-        [Required]
         public string? url { get; set; }
         [Phone]
-        public long? Phone {  get; set; }
-        public ICollection<UserAddress>? UserAddresses { get; set; }
-        public ICollection<Cart>? Carts { get; set; }
-        public ICollection<Order>? Orders { get; set; }
-        public ICollection<FeedBack>? FeedBacks { get; set; }
+        public long? Phone { get; set; }
         public Role? Role { get; set; }
-
+        public ICollection<AddressDto>? Addresses { get; set; }
     }
 }
