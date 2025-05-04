@@ -70,20 +70,20 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("orders")]
-        public async Task<IActionResult> GetOrders([FromQuery] string inputUserId)
+        public async Task<IActionResult> GetOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus)
         {
             var status = new Status();
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId)
+                if (userId != inputUserId || inputStatus == null)
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
                     return BadRequest(status);
                 }
 
-                var order = await _orderRepository.GetOrdersResultByUserId(inputUserId);
+                var order = await _orderRepository.GetOrdersResultByUserId(inputUserId, inputStatus);
                 if (order == null)
                 {
                     status.StatusCode = 500;
@@ -140,6 +140,7 @@ namespace WebSale.Controllers
                     Quantity = c.Quantity,
                     Product = c.Product,
                     Order = newOrder,
+                    Status = (int)OrderStatus.Pending
                 }).ToList();
 
                 if (newOrder == null || !await _cartRepository.DeleteCarts(carts))
@@ -148,7 +149,7 @@ namespace WebSale.Controllers
                     status.Message = "Something went wrong while creating order of user";
                     return BadRequest(status);
                 }
-
+                Console.WriteLine("newOrderProduct");
                 var newOrderProduct = await _orderProductRepository.CreateOrderProduct(ordersProduct);
 
                 var productDetailsId = carts.Select(c => c.Product.ProductDetailId).ToList();

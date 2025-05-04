@@ -129,10 +129,10 @@ namespace WebSale.Respository
             var order = await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
             return order;
         }
-        public async Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId)
+        public async Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId, int status)
         {
             var orders = await _dataContext.Orders
-                .Where(o => o.User != null && o.User.Id == userId)
+                .Where(o => o.User != null && o.User.Id == userId && o.Status == status)
                 .Include(o => o.User)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)

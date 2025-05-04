@@ -8,7 +8,7 @@ namespace WebSale.Interfaces
         Task<ICollection<Order>> GetOrders(string userId);
         Task<Order> GetOrderByUserId(string userId, int orderId);
         Task<OrderResultDetailDto> GetOrderResultByUserId(string userId, int orderId);
-        Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId);
+        Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId, int status);
         Task<ICollection<Order>> GetOrdersByUserId(string userId);
         Task<Order> CreateOrder(Order order);
         Task<Order> UpdateOrder(Order order);
