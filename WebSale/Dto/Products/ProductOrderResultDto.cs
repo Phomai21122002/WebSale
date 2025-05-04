@@ -4,8 +4,9 @@ using WebSale.Dto.ProductDetails;
 
 namespace WebSale.Dto.Products
 {
-    public class ProductResultDto : ProductDetailResultDto
+    public class ProductOrderResultDto : ProductDetailResultDto
     {
+        public int? Status { get; set; }
         public CategoryDto? category { get; set; }
     }
 }

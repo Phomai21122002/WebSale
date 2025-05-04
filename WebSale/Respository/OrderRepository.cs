@@ -5,6 +5,11 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using WebSale.Dto.Orders;
+using WebSale.Dto.Addresses;
+using WebSale.Dto.Products;
+using WebSale.Dto.Categories;
+using WebSale.Dto.Users;
 
 namespace WebSale.Respository
 {
@@ -52,6 +57,113 @@ namespace WebSale.Respository
             return order;
         }
 
+        public async Task<OrderResultDetailDto?> GetOrderResultByUserId(string userId, int orderId)
+        {
+            var order = await _dataContext.Orders
+                .Where(o => o.Id == orderId && o.User != null && o.User.Id == userId)
+                .Include(o => o.User)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ImageProducts)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.Category)
+                            .ThenInclude(c => c.ImageCategories)
+                .FirstOrDefaultAsync();
+
+            if (order == null) return null;
+
+            return new OrderResultDetailDto
+            {
+                Id = order.Id,
+                Name = order.Name,
+                Status = order.Status,
+                Total = order.Total,
+                CountProduct = order.OrderProducts.Sum(op => op.Quantity),
+                CreateOrder = order.CreatedAt,
+                User = new UserResultDto
+                {
+                    Id = order.User.Id,
+                    FirstName = order.User.FirstName,
+                    LastName = order.User.LastName,
+                    Email = order.User.Email,
+                    Phone = order.User.Phone,
+                    url = order.User.url,
+                },
+                Products = order.OrderProducts.Select(op => new ProductOrderResultDto
+                {
+                    Id = op.Product.Id,
+                    Name = op.Product.Name,
+                    Price = op.Product.Price,
+                    Quantity = op.Quantity,
+                    Slug = op.Product.Slug,
+                    Description = op.Product.ProductDetail?.Description,
+                    Sold = op.Product.ProductDetail?.Sold ?? 0,
+                    Tag = op.Product.ProductDetail?.Tag,
+                    ExpiryDate = op.Product.ProductDetail?.ExpiryDate,
+                    Status = op.Status,
+                    Urls = op.Product.ImageProducts != null
+                        ? op.Product.ImageProducts.Select(ip => ip.Url).ToList()
+                        : new List<string>(),
+                    category = op.Product.Category != null
+                        ? new CategoryDto
+                        {
+                            Id = op.Product.Category.Id,
+                            Name = op.Product.Category.Name,
+                            Description = op.Product.Category.Description,
+                            Urls = op.Product.Category.ImageCategories != null
+                                ? op.Product.Category.ImageCategories.Select(ic => ic.Url).ToList()
+                                : new List<string>()
+                        }
+                        : null
+                }).ToList()
+            };
+        }
+
+
+        public async Task<ICollection<Order>> GetOrdersByUserId(string userId)
+        {
+            var order = await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
+            return order;
+        }
+        public async Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId)
+        {
+            var orders = await _dataContext.Orders
+                .Where(o => o.User != null && o.User.Id == userId)
+                .Include(o => o.User)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ImageProducts)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.Category)
+                            .ThenInclude(c => c.ImageCategories)
+                .ToListAsync();
+
+            return orders.Select(order => new OrderResultDto {
+                Id = order.Id,
+                Name = order.Name,
+                Status = order.Status,
+                Total = order.Total,
+                CountProduct = order.OrderProducts.Sum(op => op.Quantity),
+                CreateOrder = order.CreatedAt,
+                User = order.User != null ? new UserBaseDto
+                {
+                    Email = order.User.Email,
+                    FirstName = order.User.FirstName,
+                    LastName = order.User.LastName,
+                    Phone = order.User.Phone,
+                    url = order.User.url
+                } : null,
+            }).ToList();
+        }
+
         public async Task<Order?> GetOrderByUserId(string userId, int orderId)
         {
             return await _dataContext.Orders
@@ -60,13 +172,7 @@ namespace WebSale.Respository
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
-                .FirstOrDefaultAsync(); ;
-        }
-
-        public async Task<ICollection<Order>> GetOrdersByUserId(string userId)
-        {
-            var order = await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
-            return order;
+                .FirstOrDefaultAsync();
         }
     }
 }

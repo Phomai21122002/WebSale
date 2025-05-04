@@ -16,7 +16,5 @@ namespace WebSale.Dto.ProductDetails
         [Required]
         public string? Slug { get; set; }
         public int Sold { get; set; }
-
-
     }
 }

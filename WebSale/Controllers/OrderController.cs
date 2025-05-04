@@ -52,7 +52,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var order = await _orderRepository.GetOrderByUserId(inputUserId, orderId);
+                var order = await _orderRepository.GetOrderResultByUserId(inputUserId, orderId);
                 if (order == null)
                 {
                     status.StatusCode = 500;
@@ -83,7 +83,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var order = await _orderRepository.GetOrdersByUserId(inputUserId);
+                var order = await _orderRepository.GetOrdersResultByUserId(inputUserId);
                 if (order == null)
                 {
                     status.StatusCode = 500;
@@ -127,7 +127,6 @@ namespace WebSale.Controllers
                 var order = new Order
                 {
                     Name = $"Order_{DateTime.Now:yyyyMMddHHmmss}",
-                    CountProduct = carts.Sum(cart => cart.Quantity),
                     Total = carts.Sum(cart => cart.Quantity * (cart.Product?.Price ?? 0)),
                     Status = (int)OrderStatus.Pending,
                     User = user,
@@ -199,7 +198,7 @@ namespace WebSale.Controllers
 
                 var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
 
-                if(order.Status + 1 >= Enum.GetNames(typeof(OrderStatus)).Length)
+                if (order.Status + 1 >= Enum.GetNames(typeof(OrderStatus)).Length)
                 {
                     status.StatusCode = 400;
                     status.Message = "The order is no longer being updated!!!";
@@ -264,7 +263,7 @@ namespace WebSale.Controllers
                 productDetail.Quantity += order.OrderProducts.First().Quantity;
                 productDetail.Sold -= order.OrderProducts.First().Quantity;
 
-                if(!await _productDetailRepository.UpdateProductDetail(productDetail))
+                if (!await _productDetailRepository.UpdateProductDetail(productDetail))
                 {
                     status.StatusCode = 500;
                     status.Message = "Something went wrong while updating order detail";

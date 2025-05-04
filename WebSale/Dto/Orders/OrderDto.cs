@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace WebSale.Models
+namespace WebSale.Dto.Orders
 {
-    public class Order : BaseTime
+    public class OrderDto
     {
         [Key]
         public int Id { get; set; }
@@ -14,7 +14,6 @@ namespace WebSale.Models
         [Required]
         [Range(0, long.MaxValue)]
         public long Total { get; set; }
-        public ICollection<OrderProduct>? OrderProducts { get; set; }
-        public User? User { get; set; }
+        public DateTime? CreateOrder { get; set; }
     }
 }
