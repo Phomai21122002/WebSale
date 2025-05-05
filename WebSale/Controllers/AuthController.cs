@@ -1,5 +1,8 @@
 ﻿using AutoMapper;
 using FPS_ReviewAPI.Dto;
+using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -137,17 +140,6 @@ namespace WebSale.Controllers
             return Ok(status);
         }
 
-        [HttpGet]
-        public IActionResult TestEmail()
-        {
-            var status = new Status();
-            var message = new Message(new string[] { "cafepho123456789@gmail.com" }, "Test", "<h1>Subscribe to my channel!<h1>");
-            _emailService.SendEmail(message);
-            status.StatusCode = 200;
-            status.Message = "Email send Successfully";
-            return Ok(status);
-        }
-
         [HttpPost("confirmEmail")]
         public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] int code)
         {
@@ -199,6 +191,30 @@ namespace WebSale.Controllers
             };
 
             return Ok(loginSuccess);
+        }
+
+        [HttpGet("LoginByGoogle")]
+        public async Task LoginByGoogle()
+        {
+            await HttpContext.ChallengeAsync(GoogleDefaults.AuthenticationScheme,
+                new AuthenticationProperties
+                {
+                    RedirectUri = Url.Action("GoogleResponse")
+                });
+        }
+        [HttpGet("GoogleResponse")]
+        public async Task<IActionResult> GoogleResponse()
+        {
+            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            var claims = result.Principal.Identities.FirstOrDefault().Claims.Select(claims => new
+            {
+                claims.Issuer,
+                claims.OriginalIssuer,
+                claims.Type,
+                claims.Value
+            });
+
+            return Ok(claims);
         }
     }
     
