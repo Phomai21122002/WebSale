@@ -82,5 +82,12 @@ namespace WebSale.Respository
                 .FirstOrDefaultAsync();
         }
 
+        public async Task<User?> CheckCode(string email, int code)
+        {
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.Code == code);
+            if (user == null || user.ConfirmEmail)
+                return null;
+            return user;
+        }
     }
 }

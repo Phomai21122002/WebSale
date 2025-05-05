@@ -5,6 +5,7 @@ using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using WebSale.Dto.Auth;
+using WebSale.Dto.Email;
 using WebSale.Extensions;
 using WebSale.Interfaces;
 using WebSale.Models;
@@ -21,13 +22,15 @@ namespace WebSale.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly ITokenService _tokenService;
-        public AuthController(ILoginRepository loginRepository, IMapper mapper, IUserRepository userRepository, IRoleRepository roleRepository, ITokenService tokenService)
+        private readonly IEmailService _emailService;
+        public AuthController(ILoginRepository loginRepository, IMapper mapper, IUserRepository userRepository, IRoleRepository roleRepository, ITokenService tokenService, IEmailService emailService)
         {
             _loginRepository = loginRepository;
             _mapper = mapper;
             _userRepository = userRepository;
             _roleRepository = roleRepository;
             _tokenService = tokenService;
+            _emailService = emailService;
         }
 
         [HttpPost("login")]
@@ -44,8 +47,133 @@ namespace WebSale.Controllers
             var owner = await _loginRepository.CheckUserByEmail(loginDto.Email);
             if (owner == null || !await _loginRepository.CheckPassword(HashPassword.HashPass(loginDto.Password)))
             {
+                status.StatusCode = 403;
+                status.Message = "Invalid user";
+                return BadRequest(status);
+            }
+
+            if (!owner.ConfirmEmail) {
+                owner.Code = new Random().Next(100000, 999999);
+                if (!await _userRepository.UpdateUser(owner)) {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong updating User";
+                    return BadRequest(status);
+                }
+                var message = new Message(new string[] { loginDto.Email }, "Mã xác nhận tài khoản", $"Mã xác nhận của bạn là: {owner.Code}");
+                _emailService.SendEmail(message);
+
+                return Ok(new
+                {
+                    isConfirmEmail = owner.ConfirmEmail,
+                    message = "Please verify your email to activate your account."
+                });
+            }
+
+            var claims = new List<Claim> {
+                new Claim(ClaimTypes.NameIdentifier, owner.Id ?? string.Empty),
+                new Claim(ClaimTypes.Email, owner.Email ?? string.Empty),
+                new Claim(ClaimTypes.GivenName, owner.FirstName ?? string.Empty),
+                new Claim(ClaimTypes.Surname, owner.LastName ?? string.Empty),
+                new Claim(ClaimTypes.Role, owner?.Role?.Name ?? string.Empty),
+            };
+
+            var tokens = _tokenService.GetToken(claims);
+            var refreshToken = _tokenService.GetRefreshToken();
+            var loginSuccess = new
+            {
+                isConfirmEmail = owner.ConfirmEmail,
+                Token = tokens.Token,
+                RefreshToken = refreshToken,
+                Expiration = tokens.Expiration,
+                Email = owner?.Email,
+                FirstName = owner?.FirstName,
+                LastName = owner?.LastName,
+                Phone = owner?.Phone
+            };
+
+            return Ok(loginSuccess);
+        }
+        
+        [HttpPost("register")]
+        public async Task<IActionResult> Registration([FromQuery] int idRole, [FromBody] RegisterDto registrationDto)
+        {
+
+            var status = new Status();
+            if (registrationDto == null)
+            {
                 status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
+
+            var user = await _loginRepository.CheckUserByEmail(registrationDto?.Email);
+            if (user != null)
+            {
+                status.StatusCode = 409;
                 status.Message = "Valid user";
+                return BadRequest(status);
+            }
+
+            registrationDto.Password = HashPassword.HashPass(registrationDto.Password);
+
+            var userMap = _mapper.Map<User>(registrationDto);
+            userMap.url = "";
+            userMap.Code = new Random().Next(100000, 999999);
+            userMap.TwoFactorEnabled = true;
+            userMap.Role = await _roleRepository.GetRole(idRole);
+
+            if (!await _userRepository.CreateUser(userMap))
+            {
+                status.StatusCode = 500;
+                status.Message = "saving fail";
+                return BadRequest(status);
+            }
+
+            var message = new Message(new string[] { userMap.Email }, "Mã xác nhận tài khoản", $"Mã xác nhận của bạn là: {userMap.Code}");
+            _emailService.SendEmail(message);
+
+            status.StatusCode = 200;
+            status.Message = "User created successfully";
+            return Ok(status);
+        }
+
+        [HttpGet]
+        public IActionResult TestEmail()
+        {
+            var status = new Status();
+            var message = new Message(new string[] { "cafepho123456789@gmail.com" }, "Test", "<h1>Subscribe to my channel!<h1>");
+            _emailService.SendEmail(message);
+            status.StatusCode = 200;
+            status.Message = "Email send Successfully";
+            return Ok(status);
+        }
+
+        [HttpPost("confirmEmail")]
+        public async Task<IActionResult> ConfirmEmail([FromQuery] string email, [FromQuery] int code)
+        {
+            var status = new Status();
+            if (string.IsNullOrEmpty(email) || code == 0)
+            {
+                status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
+
+            var owner = await _userRepository.CheckCode(email, code);
+
+            if (owner == null)
+            {
+                status.StatusCode = 404;
+                status.Message = "Invalid email and code";
+                return BadRequest(status);
+            }
+
+            owner.ConfirmEmail = true;
+
+            if (!await _userRepository.UpdateUser(owner))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
                 return BadRequest(status);
             }
 
@@ -71,42 +199,6 @@ namespace WebSale.Controllers
             };
 
             return Ok(loginSuccess);
-        }
-        
-        [HttpPost("register")]
-        public async Task<IActionResult> Registration([FromQuery] int idRole, [FromBody] RegisterDto registrationDto)
-        {
-
-            var status = new Status();
-            if (registrationDto == null)
-            {
-                status.StatusCode = 0;
-                status.Message = "Please fill in all required info fields";
-                return BadRequest(status);
-            }
-
-            var user = await _loginRepository.CheckUserByEmail(registrationDto?.Email);
-            if (user != null)
-            {
-                status.StatusCode = 0;
-                status.Message = "Valid user";
-                return BadRequest(status);
-            }
-
-            registrationDto.Password = HashPassword.HashPass(registrationDto.Password);
-
-            var userMap = _mapper.Map<User>(registrationDto);
-            userMap.url = "";
-            userMap.Role = await _roleRepository.GetRole(idRole);
-
-            if (!await _userRepository.CreateUser(userMap))
-            {
-                status.StatusCode = 500;
-                status.Message = "savin fail";
-                return BadRequest(status);
-            }
-
-            return Ok(userMap);
         }
     }
     

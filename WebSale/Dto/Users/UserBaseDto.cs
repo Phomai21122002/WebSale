@@ -13,9 +13,10 @@ namespace WebSale.Dto.Users
         [Required]
         [MinLength(2, ErrorMessage = "Last name must be at least 2 characters.")]
         public string? LastName { get; set; }
-        [Required]
-        [Range(1000000000, 9999999999, ErrorMessage = "Phone must be a valid 10-digit number.")]
-        public long? Phone { get; set; }
+        [Phone]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
+        public string? Phone { get; set; }
         public string? url { get; set; }
+
     }
 }

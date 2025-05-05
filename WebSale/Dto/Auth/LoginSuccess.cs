@@ -1,4 +1,6 @@
-﻿namespace WebSale.Dto.Auth
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace WebSale.Dto.Auth
 {
     public class LoginSuccess
     {
@@ -8,6 +10,8 @@
         public string? Email { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
-        public long? Phone {  get; set; }
+        [Phone]
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
+        public string? Phone { get; set; }
     }
 }

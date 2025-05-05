@@ -21,7 +21,8 @@ namespace WebSale.Dto.Addresses
         [Required]
         public string? url { get; set; }
         [Phone]
-        public long? Phone { get; set; }
+        [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
+        public string? Phone { get; set; }
         public Role? Role { get; set; }
         public ICollection<AddressDto>? Addresses { get; set; }
     }

@@ -6,6 +6,7 @@ using Microsoft.OpenApi.Models;
 using System.Text;
 using System.Text.Json.Serialization;
 using WebSale.Data;
+using WebSale.Dto.Email;
 using WebSale.Interfaces;
 using WebSale.Respository;
 
@@ -35,6 +36,8 @@ builder.Services.AddScoped<IImageFeedBackRepository, ImageFeedBackRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressUserRepository, AddressUserRepository>();
 builder.Services.AddScoped<AddressDataSeeder>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -62,10 +65,14 @@ builder.Services.AddSwaggerGen(options =>
         }
     });
 });
+
+var configuration = builder.Configuration;
 builder.Services.AddDbContext<DataContext>(options =>
 {
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
+
+builder.Services.Configure<IdentityOptions>(options => options.SignIn.RequireConfirmedEmail = true);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -88,6 +95,10 @@ builder.Services.AddAuthentication(options =>
         IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["JWT:Secret"]))
     };
 });
+
+// Add Email Configs
+var emailConfig = configuration.GetSection("EmailConfiguration").Get<EmailConfiguration>();
+builder.Services.AddSingleton(emailConfig);
 
 builder.Services.AddAWSLambdaHosting(LambdaEventSource.RestApi);
 //app.UseCors(options =>
