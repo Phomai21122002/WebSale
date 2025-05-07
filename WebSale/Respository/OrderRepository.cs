@@ -82,7 +82,9 @@ namespace WebSale.Respository
                 Name = order.Name,
                 Status = order.Status,
                 Total = order.Total,
-                CountProduct = order.OrderProducts.Sum(op => op.Quantity),
+                CountProduct = order.OrderProducts
+                    .Where(op => op.Status == order.Status)
+                    .Sum(op => op.Quantity),
                 CreateOrder = order.CreatedAt,
                 User = new UserResultDto
                 {
@@ -93,7 +95,7 @@ namespace WebSale.Respository
                     Phone = order.User.Phone,
                     url = order.User.url,
                 },
-                Products = order.OrderProducts.Select(op => new ProductOrderResultDto
+                Products = order.OrderProducts.Where(op => op.Status == order.Status).Select(op => new ProductOrderResultDto
                 {
                     Id = op.Product.Id,
                     Name = op.Product.Name,
@@ -173,6 +175,14 @@ namespace WebSale.Respository
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<bool> ProductOfOrderExists(string userId, int orderId, int productId)
+        {
+            return await _dataContext.Orders
+                .Where(o => o.Id == orderId && o.User != null && o.User.Id == userId)
+                .SelectMany(o => o.OrderProducts)
+                .AnyAsync(op => op.ProductId == productId);
         }
     }
 }

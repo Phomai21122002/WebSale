@@ -15,5 +15,6 @@ namespace WebSale.Interfaces
         Task<bool> DeleteOrder(Order order);
         Task<bool> Save();
         Task<bool> OrderExists(string userId,int id);
+        Task<bool> ProductOfOrderExists(string userId,int orderId, int productId);
     }
 }

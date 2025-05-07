@@ -1,10 +1,11 @@
-﻿using WebSale.Models;
+﻿using WebSale.Dto.Addresses;
+using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface IAddressRepository
     {
-        Task<ICollection<Address>> GetAddressesByUserId(string userId);
+        Task<ICollection<AddressDto>> GetAddressesByUserId(string userId);
         Task<Address> GetAddress(string userId, int addressId);
         Task<Address> CreateAddress(Address address);
         Task<Address> UpdateAddress(Address address);

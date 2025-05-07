@@ -149,7 +149,6 @@ namespace WebSale.Controllers
                     status.Message = "Something went wrong while creating order of user";
                     return BadRequest(status);
                 }
-                Console.WriteLine("newOrderProduct");
                 var newOrderProduct = await _orderProductRepository.CreateOrderProduct(ordersProduct);
 
                 var productDetailsId = carts.Select(c => c.Product.ProductDetailId).ToList();
@@ -198,6 +197,7 @@ namespace WebSale.Controllers
                 }
 
                 var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
+                var orderProducts = await _orderProductRepository.GetOrderProducts(inputUserId, inputOrderId);
 
                 if (order.Status + 1 >= Enum.GetNames(typeof(OrderStatus)).Length)
                 {
@@ -205,8 +205,23 @@ namespace WebSale.Controllers
                     status.Message = "The order is no longer being updated!!!";
                     return BadRequest(status);
                 }
-                order.Status += 1;
 
+                foreach (var op in orderProducts)
+                {
+                    if(op.Status == order.Status)
+                    {
+                        op.Status += 1;
+                    }
+                }
+
+                var orderProductsUpdated = await _orderProductRepository.UpdateOrderProducts(orderProducts);
+                if (orderProductsUpdated == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating order product of user";
+                    return BadRequest(status);
+                }
+                order.Status += 1;
 
                 var orderUpdated = await _orderRepository.UpdateOrder(order);
                 if (orderUpdated == null)
@@ -217,6 +232,77 @@ namespace WebSale.Controllers
                 }
 
                 return Ok(orderUpdated);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
+        [HttpPatch("CancelProductOrder")]
+        public async Task<IActionResult> CancelProductOrder([FromQuery] string inputUserId, [FromQuery] int inputOrderId, [FromQuery] int inputProductId)
+        {
+            var status = new Status();
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId != inputUserId || !await _orderRepository.ProductOfOrderExists(inputUserId, inputOrderId, inputProductId))
+                {
+                    status.StatusCode = 400;
+                    status.Message = "Please complete all required fields with accurate and complete information.";
+                    return BadRequest(status);
+                }
+
+                var orderProduct = await _orderProductRepository.GetOrderProduct(inputUserId, inputOrderId, inputProductId);
+
+                if (orderProduct.Status + 1 >= Enum.GetNames(typeof(OrderStatus)).Length)
+                {
+                    status.StatusCode = 400;
+                    status.Message = "The order product is no longer being cancel!!!";
+                    return BadRequest(status);
+                }
+                orderProduct.Status = Enum.GetNames(typeof(OrderStatus)).Length;
+
+                var orderProductUpdated = await _orderProductRepository.UpdateOrderProduct(orderProduct);
+                if (orderProductUpdated == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating order product of user";
+                    return BadRequest(status);
+                }
+
+                var productDetail = await _productDetailRepository.GetProductDetail(orderProduct.Product.ProductDetailId);
+                productDetail.Quantity += orderProduct.Quantity;
+                productDetail.Sold -= orderProduct.Quantity;
+                if (!await _productDetailRepository.UpdateProductDetail(productDetail))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating product detail";
+                    return BadRequest(status);
+                }
+
+                var orderProducts = await _orderProductRepository.GetOrderProducts(inputUserId, inputOrderId);
+                var allCanceled = orderProducts.All(op => op.Status == Enum.GetNames(typeof(OrderStatus)).Length);
+
+                if (allCanceled)
+                {
+                    var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
+                    if (order != null)
+                    {
+                        order.Status = Enum.GetNames(typeof(OrderStatus)).Length;
+                        var updatedOrder = await _orderRepository.UpdateOrder(order);
+                        if (updatedOrder == null)
+                        {
+                            status.StatusCode = 500;
+                            status.Message = "Failed to update order status";
+                            return BadRequest(status);
+                        }
+                    }
+                }
+
+                return Ok(orderProductUpdated);
             }
             catch (Exception ex)
             {
@@ -242,14 +328,13 @@ namespace WebSale.Controllers
 
                 var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
 
-                if (order.Status + 1 >= Enum.GetNames(typeof(OrderStatus)).Length)
+                if (order.Status == (int)OrderStatus.Completed)
                 {
                     status.StatusCode = 400;
                     status.Message = "The order is no longer being soft  delete!!!";
                     return BadRequest(status);
                 }
-                order.Status = Enum.GetNames(typeof(OrderStatus)).Length;
-
+                order.Status = (int)OrderStatus.Cancelled;
 
                 var orderUpdated = await _orderRepository.UpdateOrder(order);
                 if (orderUpdated == null)
@@ -258,19 +343,28 @@ namespace WebSale.Controllers
                     status.Message = "Something went wrong while updating order of user";
                     return BadRequest(status);
                 }
-                var productDetailId = order.OrderProducts.First().Product.ProductDetailId;
-                var productDetail = await _productDetailRepository.GetProductDetail(productDetailId);
-
-                productDetail.Quantity += order.OrderProducts.First().Quantity;
-                productDetail.Sold -= order.OrderProducts.First().Quantity;
-
-                if (!await _productDetailRepository.UpdateProductDetail(productDetail))
+               
+                foreach (var op in order.OrderProducts)
                 {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while updating order detail";
-                    return BadRequest(status);
+                    op.Status = (int)OrderStatus.Cancelled;
+                    var orderProductsUpdated = await _orderProductRepository.UpdateOrderProduct(op);
+                    if (orderProductsUpdated == null)
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while updating order product of user";
+                        return BadRequest(status);
+                    }
+                    var productDetail = await _productDetailRepository.GetProductDetail(op.Product.ProductDetailId);
+                    productDetail.Quantity += op.Quantity;
+                    productDetail.Sold -= op.Quantity;
+                    if (!await _productDetailRepository.UpdateProductDetail(productDetail))
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while updating order detail";
+                        return BadRequest(status);
+                    }
                 }
-                return Ok(productDetail);
+                return Ok(order);
             }
             catch (Exception ex)
             {

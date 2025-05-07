@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WebSale.Data;
+using WebSale.Dto.Addresses;
 using WebSale.Interfaces;
 using WebSale.Models;
 
@@ -37,9 +38,21 @@ namespace WebSale.Respository
             return await _dataContext.Addresses.Where(a => a.Id == addressId && a.UserAddresses.Any(ua => ua.UserId == userId)).FirstOrDefaultAsync();
         }
 
-        public async Task<ICollection<Address>> GetAddressesByUserId(string userId)
+        public async Task<ICollection<AddressDto>> GetAddressesByUserId(string userId)
         {
-            return await _dataContext.Addresses.Where(a => a.UserAddresses.Any(ua => ua.UserId == userId)).ToListAsync();
+            return await _dataContext.Addresses
+                .Where(a => a.UserAddresses.Any(ua => ua.UserId == userId))
+                .Select(a => new AddressDto
+                {
+                    Id = a.Id,
+                    Name = a.Name,
+                    Code = a.Code,
+                    IsDefault = a.UserAddresses
+                        .Where(ua => ua.UserId == userId)
+                        .Select(ua => ua.IsDefault)
+                        .FirstOrDefault()
+                })
+                .ToListAsync();
         }
 
         public async Task<ICollection<District>> GetDistricstByParentCode(string parentCode)
