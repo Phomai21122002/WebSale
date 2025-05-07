@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using WebSale.Data;
 using WebSale.Dto.Email;
 using WebSale.Interfaces;
+using WebSale.Models;
 using WebSale.Respository;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddControllers();
 builder.Services.AddControllers().AddJsonOptions(x =>
                 x.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
+
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<IUserRepository, UserRepository>();
@@ -75,6 +77,14 @@ builder.Services.AddDbContext<DataContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection"));
 });
 
+// Configure IdentityOptions for ASP.NET Identity
+builder.Services.AddIdentity<User, Role>(options =>
+{
+    options.SignIn.RequireConfirmedEmail = true;
+})
+.AddEntityFrameworkStores<DataContext>()
+.AddDefaultTokenProviders();
+
 builder.Services.Configure<IdentityOptions>(options => options.SignIn.RequireConfirmedEmail = true);
 
 builder.Services.AddAuthentication(options =>
@@ -83,6 +93,22 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
     options.DefaultScheme = JwtBearerDefaults.AuthenticationScheme;
 })
+    .AddCookie().AddGoogle(options =>
+    {
+        var clientId = builder.Configuration["GoogleKeys:ClientId"];
+        if(clientId == null)
+        {
+            throw new ArgumentNullException(nameof(clientId));
+        }
+        var clientSecret = builder.Configuration["GoogleKeys:ClientSecret"];
+        if (clientSecret == null)
+        {
+            throw new ArgumentNullException(nameof(clientSecret));
+        }
+        options.ClientId = clientId;
+        options.ClientSecret = clientSecret;
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
 .AddJwtBearer(options =>
 {
     options.SaveToken = true;
@@ -118,6 +144,7 @@ builder.Services.AddCors(options =>
     {
         policy.WithOrigins("http://localhost:3000")
               .AllowAnyMethod()
+              .AllowCredentials()
               .AllowAnyHeader();
     });
 });

@@ -3,6 +3,7 @@ using FPS_ReviewAPI.Dto;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using System.Security.Cryptography;
@@ -194,27 +195,43 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("LoginByGoogle")]
-        public async Task LoginByGoogle()
+        public IResult LoginByGoogle(
+            [FromQuery] string returnUrl,
+            [FromServices] LinkGenerator linkGenerator,
+            [FromServices] SignInManager<User> signManager,
+            [FromServices] IHttpContextAccessor httpContextAccessor)
         {
-            await HttpContext.ChallengeAsync(GoogleDefaults.AuthenticationScheme,
-                new AuthenticationProperties
-                {
-                    RedirectUri = Url.Action("GoogleResponse")
-                });
-        }
-        [HttpGet("GoogleResponse")]
-        public async Task<IActionResult> GoogleResponse()
-        {
-            var result = await HttpContext.AuthenticateAsync(CookieAuthenticationDefaults.AuthenticationScheme);
-            var claims = result.Principal.Identities.FirstOrDefault().Claims.Select(claims => new
-            {
-                claims.Issuer,
-                claims.OriginalIssuer,
-                claims.Type,
-                claims.Value
-            });
+            var redirectUrl = linkGenerator.GetPathByName(
+                httpContextAccessor.HttpContext!,
+                "GoogleResponse",
+                values: new { returnUrl });
 
-            return Ok(claims);
+            var properties = signManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl!);
+            Console.WriteLine("google");
+            return Results.Challenge(properties, authenticationSchemes: new[] { "Google" });
+        }
+
+
+        [HttpGet("GoogleResponse", Name = "GoogleResponse")]
+        public async Task<IActionResult> GoogleResponse([FromQuery] string returnUrl)
+        {
+            var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Principal == null)
+                return Unauthorized();
+
+            var claims = result.Principal.Identities.FirstOrDefault()?.Claims;
+
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+
+            // 👉 Nếu muốn tạo user tại đây, có thể làm:
+            // var user = await _userManager.FindByEmailAsync(email);
+            // if (user == null) { tạo mới user tại đây... }
+
+            Console.WriteLine($"User logged in via Google: {name} ({email})");
+
+            return Redirect(returnUrl);
         }
     }
     
