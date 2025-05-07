@@ -10,6 +10,7 @@ using WebSale.Dto.Addresses;
 using WebSale.Dto.Products;
 using WebSale.Dto.Categories;
 using WebSale.Dto.Users;
+using MailKit.Search;
 
 namespace WebSale.Respository
 {
@@ -153,7 +154,9 @@ namespace WebSale.Respository
                 Name = order.Name,
                 Status = order.Status,
                 Total = order.Total,
-                CountProduct = order.OrderProducts.Sum(op => op.Quantity),
+                CountProduct = order.OrderProducts
+                    .Where(op => op.Status == order.Status)
+                    .Sum(op => op.Quantity),
                 CreateOrder = order.CreatedAt,
                 User = order.User != null ? new UserBaseDto
                 {
@@ -184,5 +187,6 @@ namespace WebSale.Respository
                 .SelectMany(o => o.OrderProducts)
                 .AnyAsync(op => op.ProductId == productId);
         }
+
     }
 }

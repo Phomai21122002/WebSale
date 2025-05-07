@@ -100,6 +100,37 @@ namespace WebSale.Controllers
             }
         }
 
+        [HttpGet("ProductInOrders")]
+        public async Task<IActionResult> GetOrderProductsCancel([FromQuery] string inputUserId, [FromQuery] int inputStatus)
+        {
+            var status = new Status();
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId != inputUserId || inputStatus == null)
+                {
+                    status.StatusCode = 400;
+                    status.Message = "Please complete all required fields with accurate and complete information.";
+                    return BadRequest(status);
+                }
+
+                var orderProducts = await _orderProductRepository.GetProductOrdersResultCanceled(inputUserId, inputStatus);
+                if (orderProducts == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while getting order product of user";
+                    return BadRequest(status);
+                }
+                return Ok(orderProducts);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateOrder([FromQuery] string inputUserId, [FromBody] CreateOrderDto createOrderDto)
         {
