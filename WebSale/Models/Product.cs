@@ -34,7 +34,6 @@ namespace WebSale.Models
         {
             Slug = Regex.Replace(RemoveDiacritics(Name.ToLower().Trim()), @"[^a-z0-9\s-]", "")
                 .Replace(" ", "-");
-            Slug = Regex.Replace(Slug, @"-{2,}", "-");
         }
 
         private string RemoveDiacritics(string text)

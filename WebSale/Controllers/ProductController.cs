@@ -9,6 +9,7 @@ using WebSale.Dto.ProductDetails;
 using WebSale.Interfaces;
 using WebSale.Models;
 using WebSale.Respository;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace WebSale.Controllers
 {
@@ -90,8 +91,10 @@ namespace WebSale.Controllers
 
                 var productDetail = _mapper.Map<ProductDetail>(productDetailDto);
                 productDetail.Sold = 0;
+                productDetail.SaveDescriptionToFile();
 
                 var newProductDetail = await _productDetailRepository.CreateProductDetail(productDetail);
+
                 if (newProductDetail == null)
                 {
                     status.StatusCode = 500;
@@ -187,6 +190,13 @@ namespace WebSale.Controllers
                 }
 
                 var productDetail = await _productDetailRepository.GetProductDetail(product.ProductDetailId);
+                
+                if (!productDetail.UpdateDescriptionFile(productDetailDto.DescriptionDetail, productDetail.DescriptionDetail))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Description detail file not found.";
+                    return BadRequest(status);
+                }
                 _mapper.Map(productDetailDto, productDetail);
 
                 //string jsonStringproductDetail = JsonSerializer.Serialize(productDetail, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.Preserve });

@@ -60,11 +60,12 @@ namespace WebSale.Respository
                 Price = resProduct?.Price ?? 0,
                 Urls = resProduct?.ImageProducts?.Select(ip => ip.Url).ToList(),
                 Description = resProduct?.ProductDetail?.Description,
-                DescriptionDetail = resProduct?.ProductDetail?.DescriptionDetail,
+                DescriptionDetail = resProduct?.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = resProduct?.ProductDetail?.Quantity ?? 0,
                 Tag = resProduct?.ProductDetail?.Tag,
                 Sold = resProduct?.ProductDetail?.Sold ?? 0,
                 Slug = resProduct?.Slug,
+                ExpiryDate = resProduct?.ProductDetail?.ExpiryDate,
                 category = resProduct?.Category == null ? null : new CategoryDto
                 {
                     Id = resProduct.Category.Id,
@@ -112,11 +113,12 @@ namespace WebSale.Respository
                 Price = resProduct?.Price ?? 0,
                 Urls = resProduct?.ImageProducts?.Select(ip => ip.Url).ToList(),
                 Description = resProduct?.ProductDetail?.Description,
-                DescriptionDetail = resProduct?.ProductDetail?.DescriptionDetail,
+                DescriptionDetail = resProduct?.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = resProduct?.ProductDetail?.Quantity ?? 0,
                 Tag = resProduct?.ProductDetail?.Tag,
                 Sold = resProduct?.ProductDetail?.Sold ?? 0,
                 Slug = resProduct?.Slug,
+                ExpiryDate = resProduct?.ProductDetail?.ExpiryDate,
                 category = resProduct?.Category == null ? null : new CategoryDto
                 {
                     Id = resProduct.Category.Id,

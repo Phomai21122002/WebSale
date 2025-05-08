@@ -78,14 +78,14 @@ builder.Services.AddDbContext<DataContext>(options =>
 });
 
 // Configure IdentityOptions for ASP.NET Identity
-builder.Services.AddIdentity<User, Role>(options =>
-{
-    options.SignIn.RequireConfirmedEmail = true;
-})
-.AddEntityFrameworkStores<DataContext>()
-.AddDefaultTokenProviders();
+//builder.Services.AddIdentity<User, Role>(options =>
+//{
+//    options.SignIn.RequireConfirmedEmail = true;
+//})
+//.AddEntityFrameworkStores<DataContext>()
+//.AddDefaultTokenProviders();
 
-builder.Services.Configure<IdentityOptions>(options => options.SignIn.RequireConfirmedEmail = true);
+//builder.Services.Configure<IdentityOptions>(options => options.SignIn.RequireConfirmedEmail = true);
 
 builder.Services.AddAuthentication(options =>
 {
