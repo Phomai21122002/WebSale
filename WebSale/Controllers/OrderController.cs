@@ -37,8 +37,7 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId)
+                if (inputUserId == null || orderId == null)
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
@@ -84,6 +83,37 @@ namespace WebSale.Controllers
                 }
 
                 var order = await _orderRepository.GetOrdersResultByUserId(inputUserId, inputStatus);
+                if (order == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while getting order of user";
+                    return BadRequest(status);
+                }
+                return Ok(order);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
+        [HttpGet("admin/orders")]
+        public async Task<IActionResult> GetAdminOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus)
+        {
+            var status = new Status();
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (userId != inputUserId || inputStatus == null)
+                {
+                    status.StatusCode = 400;
+                    status.Message = "Please complete all required fields with accurate and complete information.";
+                    return BadRequest(status);
+                }
+
+                var order = await _orderRepository.GetOrdersResultByAdmin(inputStatus);
                 if (order == null)
                 {
                     status.StatusCode = 500;
@@ -219,8 +249,7 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
+                if (inputUserId == null || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
@@ -349,8 +378,7 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
+                if (inputUserId == null || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
@@ -411,8 +439,7 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
+                if (inputUserId == null || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";

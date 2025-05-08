@@ -158,8 +158,48 @@ namespace WebSale.Respository
                     .Where(op => op.Status == order.Status)
                     .Sum(op => op.Quantity),
                 CreateOrder = order.CreatedAt,
-                User = order.User != null ? new UserBaseDto
+                User = order.User != null ? new UserDto
                 {
+                    Id = order.User.Id,
+                    Email = order.User.Email,
+                    FirstName = order.User.FirstName,
+                    LastName = order.User.LastName,
+                    Phone = order.User.Phone,
+                    url = order.User.url
+                } : null,
+            }).ToList();
+        }
+
+        public async Task<ICollection<OrderResultDto>> GetOrdersResultByAdmin(int status)
+        {
+            var orders = await _dataContext.Orders
+                .Where(o => o.Status == status)
+                .Include(o => o.User)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ImageProducts)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.Category)
+                            .ThenInclude(c => c.ImageCategories)
+                .ToListAsync();
+
+            return orders.Select(order => new OrderResultDto
+            {
+                Id = order.Id,
+                Name = order.Name,
+                Status = order.Status,
+                Total = order.Total,
+                CountProduct = order.OrderProducts
+                    .Where(op => op.Status == order.Status)
+                    .Sum(op => op.Quantity),
+                CreateOrder = order.CreatedAt,
+                User = order.User != null ? new UserDto
+                {
+                    Id = order.User.Id,
                     Email = order.User.Email,
                     FirstName = order.User.FirstName,
                     LastName = order.User.LastName,
