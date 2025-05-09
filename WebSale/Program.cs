@@ -12,6 +12,7 @@ using WebSale.Dto.Email;
 using WebSale.Interfaces;
 using WebSale.Models;
 using WebSale.Respository;
+using WebSale.Services.Vnpay;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -42,6 +43,7 @@ builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressUserRepository, AddressUserRepository>();
 builder.Services.AddScoped<AddressDataSeeder>();
 builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<IVnPayService, VnPayService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
