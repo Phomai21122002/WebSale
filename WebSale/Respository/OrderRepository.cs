@@ -129,8 +129,7 @@ namespace WebSale.Respository
 
         public async Task<ICollection<Order>> GetOrdersByUserId(string userId)
         {
-            var order = await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
-            return order;
+            return await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
         }
         public async Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId, int status)
         {
@@ -228,5 +227,15 @@ namespace WebSale.Respository
                 .AnyAsync(op => op.ProductId == productId);
         }
 
+        public async Task<Order> GetOrderById(int orderId)
+        {
+            return await _dataContext.Orders
+                .Where(o => o.Id == orderId)
+                .Include(o => o.User)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .FirstOrDefaultAsync();
+        }
     }
 }

@@ -6,7 +6,9 @@ using System.Security.Claims;
 using WebSale.Dto.Orders;
 using WebSale.Interfaces;
 using WebSale.Models;
+using WebSale.Models.Vnpay;
 using WebSale.Respository;
+using WebSale.Services.Vnpay;
 
 namespace WebSale.Controllers
 {
@@ -20,8 +22,9 @@ namespace WebSale.Controllers
         private readonly IUserRepository _userRepository;
         private readonly IOrderProductRepository _orderProductRepository;
         private readonly IProductDetailRepository _productDetailRepository;
+        private readonly IVnPayService _vpnPayService;
 
-        public OrderController(IMapper mapper, IOrderRepository orderRepository, ICartRepository cartRepository, IUserRepository userRepository, IOrderProductRepository orderProductRepository, IProductDetailRepository productDetailRepository)
+        public OrderController(IMapper mapper, IOrderRepository orderRepository, ICartRepository cartRepository, IUserRepository userRepository, IOrderProductRepository orderProductRepository, IProductDetailRepository productDetailRepository, IVnPayService vnPayService)
         {
             _mapper = mapper;
             _orderRepository = orderRepository;
@@ -29,6 +32,7 @@ namespace WebSale.Controllers
             _userRepository = userRepository;
             _orderProductRepository = orderProductRepository;
             _productDetailRepository = productDetailRepository;
+            _vpnPayService = vnPayService;
         }
 
         [HttpGet("order")]
@@ -191,6 +195,7 @@ namespace WebSale.Controllers
                     Total = carts.Sum(cart => cart.Quantity * (cart.Product?.Price ?? 0)),
                     Status = (int)OrderStatus.Pending,
                     User = user,
+                    CreatedAt = DateTime.Now,
                 };
                 var newOrder = await _orderRepository.CreateOrder(order);
                 
@@ -201,10 +206,11 @@ namespace WebSale.Controllers
                     Quantity = c.Quantity,
                     Product = c.Product,
                     Order = newOrder,
-                    Status = (int)OrderStatus.Pending
+                    Status = (int)OrderStatus.Pending,
+                    CreatedAt = DateTime.Now,
                 }).ToList();
 
-                if (newOrder == null || !await _cartRepository.DeleteCarts(carts))
+                if (newOrder == null)
                 {
                     status.StatusCode = 500;
                     status.Message = "Something went wrong while creating order of user";
@@ -212,28 +218,45 @@ namespace WebSale.Controllers
                 }
                 var newOrderProduct = await _orderProductRepository.CreateOrderProduct(ordersProduct);
 
-                var productDetailsId = carts.Select(c => c.Product.ProductDetailId).ToList();
-                var productDetails = _productDetailRepository.GetProductDetails(productDetailsId);
-
-                var productDetailsUpdated = productDetails.Result.Select(pd =>
+                var paymentInfo = new PaymentInformationModel
                 {
-                    var matchingCart = carts.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
-                    if (matchingCart != null)
-                    {
-                        pd.Quantity -= matchingCart.Quantity;
-                        pd.Sold += matchingCart.Quantity;
-                    }
-                    return pd;
-                }).ToList();
+                    OrderId = newOrder.Id,
+                    Amount = newOrder.Total,
+                    OrderDescription = $"Payment for order #{newOrder.Id}",
+                    Name = user.FirstName,
+                    OrderType = "other"
+                };
+                var url = _vpnPayService.CreatePaymentUrl(paymentInfo, HttpContext);
 
-                if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
-                {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while updating product detail";
-                    return BadRequest(status);
-                }
+                //if (newOrder == null || !await _cartRepository.DeleteCarts(carts))
+                //{
+                //    status.StatusCode = 500;
+                //    status.Message = "Something went wrong while creating order of user";
+                //    return BadRequest(status);
+                //}
 
-                return Ok(newOrder);
+                //var productDetailsId = carts.Select(c => c.Product.ProductDetailId).ToList();
+                //var productDetails = _productDetailRepository.GetProductDetails(productDetailsId);
+
+                //var productDetailsUpdated = productDetails.Result.Select(pd =>
+                //{
+                //    var matchingCart = carts.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
+                //    if (matchingCart != null)
+                //    {
+                //        pd.Quantity -= matchingCart.Quantity;
+                //        pd.Sold += matchingCart.Quantity;
+                //    }
+                //    return pd;
+                //}).ToList();
+
+                //if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
+                //{
+                //    status.StatusCode = 500;
+                //    status.Message = "Something went wrong while updating product detail";
+                //    return BadRequest(status);
+                //}
+
+                return Ok(new { PaymentUrl = url });
             }
             catch (Exception ex)
             {

@@ -26,7 +26,7 @@ namespace WebSale.Data
         public DbSet<Provinces> Provinces { get; set; }
         public DbSet<District> Districts { get; set; }
         public DbSet<Ward> Wards { get; set; }
-        public DbSet<VnpayModel> VnInfos { get; set; }
+        //public DbSet<VnpayModel> VnInfos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

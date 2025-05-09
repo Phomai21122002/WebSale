@@ -7,6 +7,7 @@ using WebSale.Models;
 using WebSale.Models.Vnpay;
 using WebSale.Services.Vnpay;
 using static System.Net.Mime.MediaTypeNames;
+using WebSale.Interfaces;
 
 namespace WebSale.Controllers
 {
@@ -16,10 +17,11 @@ namespace WebSale.Controllers
     {
 
         private readonly IVnPayService _vnPayService;
-        public PaymentController(IVnPayService vnPayService)
+        private readonly IOrderRepository _orderRepository;
+        public PaymentController(IVnPayService vnPayService, IOrderRepository orderRepository)
         {
-
             _vnPayService = vnPayService;
+            _orderRepository = orderRepository;
         }
         [HttpPost("create")]
         public IActionResult CreatePaymentUrlVnpay(PaymentInformationModel model)
@@ -30,13 +32,55 @@ namespace WebSale.Controllers
         }
         
         [HttpGet]
-        public async Task<IActionResult> PaymentCallback([FromQuery] string inputUserId, [FromBody] CreateOrderDto createOrderDto)
+        public async Task<IActionResult> PaymentCallback()
         {
             var status = new Status();
             var response = _vnPayService.PaymentExecute(Request.Query);
-            Console.WriteLine(inputUserId);
-            Console.WriteLine(JsonSerializer.Serialize(createOrderDto, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.IgnoreCycles }));
+            if (!response.Success)
+            {
+                status.StatusCode = 400;
+                status.Message = "Payment failed or invalid signature";
+                return BadRequest(status);
+            }
+            var orderId = int.Parse(response.OrderId);
+            var order = await _orderRepository.GetOrderById(orderId);
+            if (order == null)
+            {
+                status.StatusCode = 404;
+                status.Message = "Order not found";
+                return NotFound(status);
+            }
 
+            if (response.VnPayResponseCode == "00")
+            {
+                order.Status = (int)OrderStatus.Pending;
+                //order.TransactionId = response.TransactionId;
+                //order.PaymentId = response.PaymentId;
+                //order.DatePaid = DateTime.Now;
+
+                var updateResult = await _orderRepository.UpdateOrder(order);
+                if (updateResult == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Failed to update order after payment";
+                    return BadRequest(status);
+                }
+
+                // Clear cart
+                //var deleteCarts = await _cartRepository.DeleteCartsByUserId(order.UserId);
+                // Update product quantity (optional, implement logic here)
+
+                return Ok(new
+                {
+                    Message = "Payment successful",
+                    OrderId = order.Id,
+                    TransactionId = response.TransactionId
+                });
+            }
+
+            status.StatusCode = 400;
+            status.Message = "Payment was not successful";
+            return BadRequest(status);
             //if(response.VnPayResponseCode == "00")
             //{
             //    var newVnpayInsert = new VnpayModel
@@ -57,8 +101,6 @@ namespace WebSale.Controllers
             //    var PaymentMethod = response.PaymentMethod;
             //    var PaymentId = response.PaymentId;
             //}
-
-            return Ok(response);
         }
     }
 
