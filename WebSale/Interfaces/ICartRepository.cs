@@ -15,6 +15,7 @@ namespace WebSale.Interfaces
         Task<ICollection<Cart>> GetCartsByCartsId(string userId, CreateOrderDto createOrderDtos);
         Task<Cart> CreateCart(Cart cart);
         Task<bool> UpdateCart(Cart cart);
+        Task<bool> UpdateCarts(IEnumerable<Cart> carts);
         Task<bool> DeleteCart(Cart cart);
         Task<bool> DeleteCarts(ICollection<Cart> carts);
         Task<bool> Save();

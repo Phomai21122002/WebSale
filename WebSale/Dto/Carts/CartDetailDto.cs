@@ -8,7 +8,8 @@ namespace WebSale.Dto.Carts
     {
         public int Id { get; set; }
         public long Total { get; set; }
-        public ProductDetailResultDto? products { get; set; }
+        public bool IsSelectedForOrder { get; set; }
+        public ProductDetailResultDto? product { get; set; }
         public CategoryDto? category { get; set; }
     }
 }

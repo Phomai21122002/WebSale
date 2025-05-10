@@ -1,10 +1,11 @@
-﻿namespace WebSale.Dto.Orders
+﻿using System.Text.Json.Serialization;
+
+namespace WebSale.Dto.Orders
 {
-    public enum OrderStatus
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public enum OrderPaymentStatus
     {
-        Pending = 1,
-        Processing,
-        Completed,
-        Cancelled
+        COD,
+        VnPay
     }
 }

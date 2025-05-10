@@ -18,17 +18,14 @@ namespace WebSale.Controllers
 
         private readonly IVnPayService _vnPayService;
         private readonly IOrderRepository _orderRepository;
-        public PaymentController(IVnPayService vnPayService, IOrderRepository orderRepository)
+        private readonly ICartRepository _cartRepository;
+        private readonly IProductDetailRepository _productDetailRepository;
+        public PaymentController(IVnPayService vnPayService, IOrderRepository orderRepository, ICartRepository cartRepository, IProductDetailRepository productDetailRepository)
         {
             _vnPayService = vnPayService;
             _orderRepository = orderRepository;
-        }
-        [HttpPost("create")]
-        public IActionResult CreatePaymentUrlVnpay(PaymentInformationModel model)
-        {
-            var url = _vnPayService.CreatePaymentUrl(model, HttpContext);
-
-            return Ok(url);
+            _cartRepository = cartRepository;
+            _productDetailRepository = productDetailRepository;
         }
         
         [HttpGet]
@@ -53,10 +50,28 @@ namespace WebSale.Controllers
 
             if (response.VnPayResponseCode == "00")
             {
+                var newVnpayInsert = new VnpayModel
+                {
+                    OrderId = response.OrderId,
+                    PaymentMethod = response.PaymentMethod,
+                    OrderDescription = response.OrderDescription,
+                    TransactionId = response.TransactionId,
+                    PaymentId = response.PaymentId,
+                    DateCreated = DateTime.Now,
+                };
+                Console.WriteLine(JsonSerializer.Serialize(order, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.IgnoreCycles }));
+
+                var vnpayModel = await _vnPayService.CreateVnPayModel(newVnpayInsert);
+                if (vnpayModel == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong saving VnPay Model";
+                    return BadRequest(status);
+                }
+
                 order.Status = (int)OrderStatus.Pending;
-                //order.TransactionId = response.TransactionId;
-                //order.PaymentId = response.PaymentId;
-                //order.DatePaid = DateTime.Now;
+                order.Vnpay = vnpayModel;
+                order.CreatedAt = DateTime.Now;
 
                 var updateResult = await _orderRepository.UpdateOrder(order);
                 if (updateResult == null)
@@ -65,10 +80,36 @@ namespace WebSale.Controllers
                     status.Message = "Failed to update order after payment";
                     return BadRequest(status);
                 }
+                
+                var carts = await _cartRepository.GetCarts(order?.User.Id);
+                var cartsRemoved = carts.Where(c=>c.IsSelectedForOrder).ToList();
+                if (!await _cartRepository.DeleteCarts(cartsRemoved))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while creating order of user";
+                    return BadRequest(status);
+                }
 
-                // Clear cart
-                //var deleteCarts = await _cartRepository.DeleteCartsByUserId(order.UserId);
-                // Update product quantity (optional, implement logic here)
+                var productDetailsId = cartsRemoved.Select(c => c.Product.ProductDetailId).ToList();
+                var productDetails = _productDetailRepository.GetProductDetails(productDetailsId);
+
+                var productDetailsUpdated = productDetails.Result.Select(pd =>
+                {
+                    var matchingCart = cartsRemoved.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
+                    if (matchingCart != null)
+                    {
+                        pd.Quantity -= matchingCart.Quantity;
+                        pd.Sold += matchingCart.Quantity;
+                    }
+                    return pd;
+                }).ToList();
+
+                if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating product detail";
+                    return BadRequest(status);
+                }
 
                 return Ok(new
                 {
@@ -81,27 +122,6 @@ namespace WebSale.Controllers
             status.StatusCode = 400;
             status.Message = "Payment was not successful";
             return BadRequest(status);
-            //if(response.VnPayResponseCode == "00")
-            //{
-            //    var newVnpayInsert = new VnpayModel
-            //    {
-            //        OrderId = response.OrderId,
-            //        PaymentMethod = response.PaymentMethod,
-            //        OrderDescription = response.OrderDescription,
-            //        TransactionId = response.TransactionId,
-            //        PaymentId = response.PaymentId,
-            //        DateCreated = DateTime.Now,
-            //    };
-            //    if (!await _vnPayService.CreateVnPayModel(newVnpayInsert)) {
-            //        status.StatusCode = 500;
-            //        status.Message = "Something went wrong saving VnPay Model";
-            //        return BadRequest(status);
-            //    }
-
-            //    var PaymentMethod = response.PaymentMethod;
-            //    var PaymentId = response.PaymentId;
-            //}
         }
     }
-
 }

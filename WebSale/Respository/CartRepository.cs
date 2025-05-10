@@ -82,7 +82,8 @@ namespace WebSale.Respository
             {
                 Id = cartRes.Id,
                 Total = cartRes.Quantity * cartRes.Product?.Price ?? 0,
-                products = new ProductDetailResultDto
+                IsSelectedForOrder = cartRes.IsSelectedForOrder,
+                product = new ProductDetailResultDto
                 {
                     Id = cartRes.Product?.Id ?? 0,
                     Name = cartRes.Product?.Name,
@@ -109,7 +110,11 @@ namespace WebSale.Respository
 
         public async Task<ICollection<Cart>> GetCarts(string userId)
         {
-            return await _dataContext.Carts.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
+            return await _dataContext.Carts.Where(c => c.User != null && c.User.Id == userId)
+                .Include(c => c.Product)
+                    .ThenInclude(cp => cp.ProductDetail)
+                .Include(c => c.Product)
+                    .ThenInclude(cp => cp.ImageProducts).ToListAsync();
         }
 
         public async Task<ICollection<CartDetailDto>> GetCartsByUserId(string userId)
@@ -131,7 +136,8 @@ namespace WebSale.Respository
             {
                 Id = cp.Id,
                 Total = cp.Quantity * cp.Product?.Price ?? 0,
-                products = new ProductDetailResultDto
+                IsSelectedForOrder = cp.IsSelectedForOrder,
+                product = new ProductDetailResultDto
                 {
                     Id = cp.Product?.Id ?? 0,
                     Name = cp.Product?.Name,
@@ -170,7 +176,17 @@ namespace WebSale.Respository
             _dataContext.Entry(cart).Reference(c => c.Product).IsModified = false;
             return await Save();
         }
+        public async Task<bool> UpdateCarts(IEnumerable<Cart> carts)
+        {
+            foreach (var cart in carts)
+            {
+                _dataContext.Carts.Attach(cart);
+                _dataContext.Entry(cart).Property(c => c.IsSelectedForOrder).IsModified = true;
+                _dataContext.Entry(cart).Property(c => c.UpdatedAt).IsModified = true;
+            }
 
+            return await Save();
+        }
         public async Task<bool> DeleteCarts(ICollection<Cart> carts)
         {
             _dataContext.Carts.RemoveRange(carts);

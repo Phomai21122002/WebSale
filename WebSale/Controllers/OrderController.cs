@@ -180,6 +180,12 @@ namespace WebSale.Controllers
                 }
 
                 var user = await _userRepository.GetUser(userId);
+                if (createOrderDto.CartsId == null || !createOrderDto.CartsId.Any())
+                {
+                    status.StatusCode = 400;
+                    status.Message = "No cart items selected for order.";
+                    return BadRequest(status);
+                }
                 var carts = await _cartRepository.GetCartsByCartsId(inputUserId, createOrderDto);
 
                 if(carts.Count == 0)
@@ -195,6 +201,7 @@ namespace WebSale.Controllers
                     Total = carts.Sum(cart => cart.Quantity * (cart.Product?.Price ?? 0)),
                     Status = (int)OrderStatus.Pending,
                     User = user,
+                    PaymentMethod = createOrderDto.PaymentMethod.ToString(),
                     CreatedAt = DateTime.Now,
                 };
                 var newOrder = await _orderRepository.CreateOrder(order);
@@ -218,45 +225,49 @@ namespace WebSale.Controllers
                 }
                 var newOrderProduct = await _orderProductRepository.CreateOrderProduct(ordersProduct);
 
-                var paymentInfo = new PaymentInformationModel
+                if (OrderPaymentStatus.VnPay == createOrderDto.PaymentMethod) {
+                    var paymentInfo = new PaymentInformationModel
+                    {
+                        OrderId = newOrder.Id,
+                        Amount = newOrder.Total,
+                        OrderDescription = $"Payment for order #{newOrder.Id}",
+                        Name = user.FirstName,
+                        OrderType = "other"
+                    };
+                    var url = _vpnPayService.CreatePaymentUrl(paymentInfo, HttpContext);
+
+                    return Ok(new { PaymentUrl = url });
+                }
+
+                var cartsRemoved = carts.Where(c => c.IsSelectedForOrder).ToList();
+                if (!await _cartRepository.DeleteCarts(cartsRemoved))
                 {
-                    OrderId = newOrder.Id,
-                    Amount = newOrder.Total,
-                    OrderDescription = $"Payment for order #{newOrder.Id}",
-                    Name = user.FirstName,
-                    OrderType = "other"
-                };
-                var url = _vpnPayService.CreatePaymentUrl(paymentInfo, HttpContext);
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while creating order of user";
+                    return BadRequest(status);
+                }
 
-                //if (newOrder == null || !await _cartRepository.DeleteCarts(carts))
-                //{
-                //    status.StatusCode = 500;
-                //    status.Message = "Something went wrong while creating order of user";
-                //    return BadRequest(status);
-                //}
+                var productDetailsId = cartsRemoved.Select(c => c.Product.ProductDetailId).ToList();
+                var productDetails = await _productDetailRepository.GetProductDetails(productDetailsId);
 
-                //var productDetailsId = carts.Select(c => c.Product.ProductDetailId).ToList();
-                //var productDetails = _productDetailRepository.GetProductDetails(productDetailsId);
+                var productDetailsUpdated = productDetails.Select(pd =>
+                {
+                    var matchingCart = cartsRemoved.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
+                    if (matchingCart != null)
+                    {
+                        pd.Quantity -= matchingCart.Quantity;
+                        pd.Sold += matchingCart.Quantity;
+                    }
+                    return pd;
+                }).ToList();
 
-                //var productDetailsUpdated = productDetails.Result.Select(pd =>
-                //{
-                //    var matchingCart = carts.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
-                //    if (matchingCart != null)
-                //    {
-                //        pd.Quantity -= matchingCart.Quantity;
-                //        pd.Sold += matchingCart.Quantity;
-                //    }
-                //    return pd;
-                //}).ToList();
-
-                //if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
-                //{
-                //    status.StatusCode = 500;
-                //    status.Message = "Something went wrong while updating product detail";
-                //    return BadRequest(status);
-                //}
-
-                return Ok(new { PaymentUrl = url });
+                if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating product detail";
+                    return BadRequest(status);
+                }
+                return Ok(newOrder);
             }
             catch (Exception ex)
             {

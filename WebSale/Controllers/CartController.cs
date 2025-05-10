@@ -119,8 +119,10 @@ namespace WebSale.Controllers
                     var cartMap = new Cart
                     {
                         Quantity = cartDto.Quantity,
+                        IsSelectedForOrder = true,
                         User = user,
-                        Product = product
+                        Product = product,
+                        CreatedAt = DateTime.Now,
                     };
 
                     cart = await _cartRepository.CreateCart(cartMap);
@@ -178,6 +180,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
                 cart.Quantity = cartUpdateDto.Quantity;
+                cart.IsSelectedForOrder = cartUpdateDto.IsSelectedForOrder;
                 cart.UpdatedAt = DateTime.Now;
 
                 if (!await _cartRepository.UpdateCart(cart))
@@ -188,6 +191,53 @@ namespace WebSale.Controllers
                 }
                 var resultUpdateCart = await _cartRepository.GetCartByUserId(userId, cart.Id);
                 return Ok(resultUpdateCart);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.InnerException?.Message ?? ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
+        [HttpPatch("UpdateCartsOrder")]
+        public async Task<IActionResult> UpdateCartsOrder([FromBody] CartUpdateOrderDto cartUpdateOrderDto)
+        {
+            var status = new Status();
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+                if (cartUpdateOrderDto == null || userId != cartUpdateOrderDto?.UserId)
+                {
+                    status.StatusCode = 400;
+                    status.Message = "Please complete all required fields with accurate and complete information.";
+                    return BadRequest(status);
+                }
+
+                var userCarts = await _cartRepository.GetCarts(userId);
+                if (userCarts == null || !userCarts.Any())
+                {
+                    status.StatusCode = 404;
+                    status.Message = "No carts found for this user.";
+                    return BadRequest(status);
+                }
+                var selectedIds = cartUpdateOrderDto.CartsId ?? new List<int>();
+                foreach (var cart in userCarts)
+                {
+                    if (selectedIds.Contains(cart.Id))
+                    {
+                        cart.IsSelectedForOrder = !cart.IsSelectedForOrder;
+                        cart.UpdatedAt = DateTime.Now;
+                    }
+                }
+
+                if (!await _cartRepository.UpdateCarts(userCarts))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating carts.";
+                    return BadRequest(status);
+                }
+                return Ok(userCarts);
             }
             catch (Exception ex)
             {

@@ -14,7 +14,9 @@ namespace WebSale.Models
         [Required]
         [Range(0, long.MaxValue)]
         public long Total { get; set; }
+        public string PaymentMethod { get; set; }
         public ICollection<OrderProduct>? OrderProducts { get; set; }
         public User? User { get; set; }
+        public VnpayModel? Vnpay { get; set; }
     }
 }

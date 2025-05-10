@@ -40,10 +40,11 @@ namespace WebSale.Services.Vnpay
             return paymentUrl;
         }
 
-        public async Task<bool> CreateVnPayModel(VnpayModel model)
+        public async Task<VnpayModel> CreateVnPayModel(VnpayModel model)
         {
             await _dataContext.AddAsync(model);
-            return await _dataContext.SaveChangesAsync() > 0;
+            await _dataContext.SaveChangesAsync();
+            return model;
         }
 
         public PaymentResponseModel PaymentExecute(IQueryCollection collections)

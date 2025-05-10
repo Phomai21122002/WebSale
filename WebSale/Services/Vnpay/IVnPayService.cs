@@ -7,7 +7,7 @@ namespace WebSale.Services.Vnpay
     {
         string CreatePaymentUrl(PaymentInformationModel model, HttpContext context);
         PaymentResponseModel PaymentExecute(IQueryCollection collections);
-        Task<bool> CreateVnPayModel(VnpayModel model);
+        Task<VnpayModel> CreateVnPayModel(VnpayModel model);
 
     }
 }
