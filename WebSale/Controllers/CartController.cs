@@ -200,6 +200,7 @@ namespace WebSale.Controllers
             }
         }
 
+        // check product of cart to purchase
         [HttpPatch("UpdateCartsOrder")]
         public async Task<IActionResult> UpdateCartsOrder([FromBody] CartUpdateOrderDto cartUpdateOrderDto)
         {

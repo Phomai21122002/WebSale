@@ -66,6 +66,7 @@ namespace WebSale.Controllers
             try
             {
                 var categoryMap = _mapper.Map<Category>(category);
+                categoryMap.CreatedAt = DateTime.Now;
 
                 var newCategory = await _categoryRepository.CreateCategory(categoryMap);
                 if (newCategory == null)
@@ -116,6 +117,8 @@ namespace WebSale.Controllers
             try
             {
                 var categoryMap = _mapper.Map<Category>(category);
+                categoryMap.UpdatedAt = DateTime.Now;
+
                 var newCategory = await _categoryRepository.UpdateCategory(categoryMap);
                 if (newCategory == null)
                 {

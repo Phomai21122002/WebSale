@@ -113,15 +113,20 @@ namespace WebSale.Controllers
 
                 return Ok(new
                 {
+                    Success = true,
                     Message = "Payment successful",
                     OrderId = order.Id,
                     TransactionId = response.TransactionId
                 });
             }
 
-            status.StatusCode = 400;
-            status.Message = "Payment was not successful";
-            return BadRequest(status);
+            return Ok(new
+            {
+                Success = false,
+                StatusCode = 400,
+                Message = "Payment was not successful",
+            });
+
         }
     }
 }

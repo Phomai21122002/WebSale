@@ -125,6 +125,7 @@ namespace WebSale.Controllers
             userMap.Code = new Random().Next(100000, 999999);
             userMap.TwoFactorEnabled = true;
             userMap.Role = await _roleRepository.GetRole(idRole);
+            userMap.CreatedAt = DateTime.Now;
 
             if (!await _userRepository.CreateUser(userMap))
             {

@@ -136,6 +136,8 @@ namespace WebSale.Respository
             var orders = await _dataContext.Orders
                 .Where(o => o.User != null && o.User.Id == userId && o.Status == status)
                 .Include(o => o.User)
+                    .ThenInclude(ua => ua.UserAddresses)
+                        .ThenInclude(a => a.Address)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
@@ -157,15 +159,26 @@ namespace WebSale.Respository
                     .Where(op => op.Status == order.Status)
                     .Sum(op => op.Quantity),
                 CreateOrder = order.CreatedAt,
-                User = order.User != null ? new UserDto
+                User = order.User != null ? new UserResultDto
                 {
                     Id = order.User.Id,
                     Email = order.User.Email,
                     FirstName = order.User.FirstName,
                     LastName = order.User.LastName,
                     Phone = order.User.Phone,
-                    url = order.User.url
+                    url = order.User.url,
+                    Addresses = order.User.UserAddresses!
+                    .Select(ud => new AddressDto
+                    {
+                        Id = ud.Address!.Id,
+                        Name = ud.Address!.Name!,
+                        Code = ud.Address.Code,
+                        IsDefault = ud.IsDefault
+                    })
+                    .ToList(),
+                    Role = order.User.Role
                 } : null,
+               
             }).ToList();
         }
 
@@ -174,6 +187,8 @@ namespace WebSale.Respository
             var orders = await _dataContext.Orders
                 .Where(o => o.Status == status)
                 .Include(o => o.User)
+                    .ThenInclude(ua => ua.UserAddresses)
+                        .ThenInclude(a => a.Address)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
@@ -196,14 +211,24 @@ namespace WebSale.Respository
                     .Where(op => op.Status == order.Status)
                     .Sum(op => op.Quantity),
                 CreateOrder = order.CreatedAt,
-                User = order.User != null ? new UserDto
+                User = order.User != null ? new UserResultDto
                 {
                     Id = order.User.Id,
                     Email = order.User.Email,
                     FirstName = order.User.FirstName,
                     LastName = order.User.LastName,
                     Phone = order.User.Phone,
-                    url = order.User.url
+                    url = order.User.url,
+                    Addresses = order.User.UserAddresses!
+                    .Select(ud => new AddressDto
+                    {
+                        Id = ud.Address!.Id,
+                        Name = ud.Address!.Name!,
+                        Code = ud.Address.Code,
+                        IsDefault = ud.IsDefault
+                    })
+                    .ToList(),
+                    Role = order.User.Role
                 } : null,
             }).ToList();
         }

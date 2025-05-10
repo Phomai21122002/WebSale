@@ -1,10 +1,11 @@
-﻿using WebSale.Dto.Users;
+﻿using WebSale.Dto.Addresses;
+using WebSale.Dto.Users;
 
 namespace WebSale.Dto.Orders
 {
     public class OrderResultDto : OrderDto
     {
         public int CountProduct { get; set; }
-        public UserDto? User { get; set; }
+        public UserResultDto? User { get; set; }
     }
 }

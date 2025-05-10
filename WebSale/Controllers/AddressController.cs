@@ -140,6 +140,7 @@ namespace WebSale.Controllers
                 }
                 var user = await _userRepository.GetUser(userId);
                 var addressMap = _mapper.Map<Address>(addressDto);
+                addressMap.CreatedAt = DateTime.Now;
                 var newAddress = await _addressRepository.CreateAddress(addressMap);
                 if(newAddress == null)
                 {
@@ -153,6 +154,7 @@ namespace WebSale.Controllers
                     IsDefault = false,
                     User = user,
                     Address = newAddress,
+                    CreatedAt = DateTime.Now
                 };
                 if(!await _addressUserRepository.CreateUserAddress(addressUser))
                 {
@@ -204,6 +206,7 @@ namespace WebSale.Controllers
                 }
 
                 userAddress.IsDefault = true;
+                userAddress.UpdatedAt = DateTime.Now;
                 var updateUserAddress = await _addressUserRepository.UpdateUserAddress(userAddress);
                 if(updateUserAddress == null)
                 {
