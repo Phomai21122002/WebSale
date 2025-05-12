@@ -1,11 +1,12 @@
 ﻿using WebSale.Dto.Products;
+using WebSale.Extensions;
 using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface IProductRepository
     {
-        Task<ICollection<ProductResultDto>> GetProducts();
+        Task<PageResult<ProductResultDto>> GetProducts(QueryProducts queryProducts);
         Task<Product?> GetProduct(int id);
         Task<int?> GetIdProductBySlug(string slug);
         Task<ProductResultDto?> GetProductResult(int id);
