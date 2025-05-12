@@ -231,43 +231,45 @@ namespace WebSale.Controllers
                         OrderId = newOrder.Id,
                         Amount = newOrder.Total,
                         OrderDescription = $"Payment for order #{newOrder.Id}",
-                        Name = user.FirstName,
+                        Name = user.FirstName + " " + user.LastName,
                         OrderType = "other"
                     };
                     var url = _vpnPayService.CreatePaymentUrl(paymentInfo, HttpContext);
 
                     return Ok(new { PaymentUrl = url });
                 }
-
-                var cartsRemoved = carts.Where(c => c.IsSelectedForOrder).ToList();
-                if (!await _cartRepository.DeleteCarts(cartsRemoved))
+                else
                 {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while creating order of user";
-                    return BadRequest(status);
-                }
-
-                var productDetailsId = cartsRemoved.Select(c => c.Product.ProductDetailId).ToList();
-                var productDetails = await _productDetailRepository.GetProductDetails(productDetailsId);
-
-                var productDetailsUpdated = productDetails.Select(pd =>
-                {
-                    var matchingCart = cartsRemoved.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
-                    if (matchingCart != null)
+                    var cartsRemoved = carts.Where(c => c.IsSelectedForOrder).ToList();
+                    if (!await _cartRepository.DeleteCarts(cartsRemoved))
                     {
-                        pd.Quantity -= matchingCart.Quantity;
-                        pd.Sold += matchingCart.Quantity;
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while creating order of user";
+                        return BadRequest(status);
                     }
-                    return pd;
-                }).ToList();
 
-                if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
-                {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while updating product detail";
-                    return BadRequest(status);
+                    var productDetailsId = cartsRemoved.Select(c => c.Product.ProductDetailId).ToList();
+                    var productDetails = await _productDetailRepository.GetProductDetails(productDetailsId);
+
+                    var productDetailsUpdated = productDetails.Select(pd =>
+                    {
+                        var matchingCart = cartsRemoved.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
+                        if (matchingCart != null)
+                        {
+                            pd.Quantity -= matchingCart.Quantity;
+                            pd.Sold += matchingCart.Quantity;
+                        }
+                        return pd;
+                    }).ToList();
+
+                    if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while updating product detail";
+                        return BadRequest(status);
+                    }
+                    return Ok(newOrder);
                 }
-                return Ok(newOrder);
             }
             catch (Exception ex)
             {

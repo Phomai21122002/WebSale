@@ -132,7 +132,8 @@ namespace WebSale.Controllers
                 {
                     Content = feedbackDto.Content,
                     User = user,
-                    Product = product
+                    Product = product,
+                    CreatedAt = DateTime.Now
                 };
 
                 var newFeedback = await _feedBackRepository.CreateFeedBack(feedback);

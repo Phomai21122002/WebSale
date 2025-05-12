@@ -48,6 +48,8 @@ namespace WebSale.Controllers
                 return NotFound(status);
             }
 
+            Console.WriteLine(response.VnPayResponseCode);
+
             if (response.VnPayResponseCode == "00")
             {
                 var newVnpayInsert = new VnpayModel
