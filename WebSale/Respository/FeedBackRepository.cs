@@ -5,6 +5,10 @@ using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using System.Linq;
+using WebSale.Dto.Products;
+using WebSale.Dto.Categories;
+using WebSale.Extensions;
+using WebSale.Dto.QueryDto;
 
 namespace WebSale.Respository
 {
@@ -46,9 +50,28 @@ namespace WebSale.Respository
             return await _dataContext.FeedBacks.Include(fb => fb.User).Include(fb => fb.ImageFeedBacks).FirstOrDefaultAsync(f => f.Id == feedbackId && f.User != null && f.User.Id == userId);
         }
 
-        public async Task<ICollection<FeedBack>> GetFeedBacks(int productId)
+        public async Task<PageResult<FeedBack>> GetFeedBacks(int productId, QueryPaginationDto queryPaginationDto)
         {
-            return await _dataContext.FeedBacks.Where(fb => fb.Product != null && fb.Product.Id == productId).Include(fb => fb.User).Include(fb => fb.ImageFeedBacks).ToListAsync();
+            var query = _dataContext.FeedBacks.Where(fb => fb.Product != null && fb.Product.Id == productId).Include(fb => fb.User).Include(fb => fb.ImageFeedBacks).AsQueryable();
+
+            var totalCount = await query.CountAsync();
+
+            if (queryPaginationDto.PageNumber > 0 && queryPaginationDto.PageSize > 0)
+            {
+                query = query
+                    .Skip((queryPaginationDto.PageNumber - 1) * queryPaginationDto.PageSize)
+                    .Take(queryPaginationDto.PageSize);
+            }
+
+            var resFeedbacks = await query.ToListAsync();
+
+            return new PageResult<FeedBack>
+            {
+                TotalCount = totalCount,
+                PageNumber = queryPaginationDto.PageNumber,
+                PageSize = queryPaginationDto.PageSize,
+                Datas = resFeedbacks
+            };
         }
 
         public async Task<bool> Save()

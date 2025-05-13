@@ -1,10 +1,13 @@
-﻿using WebSale.Models;
+﻿using WebSale.Dto.Products;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
+using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface IFeedBackRepository
     {
-        Task<ICollection<FeedBack>> GetFeedBacks(int productId);
+        Task<PageResult<FeedBack>> GetFeedBacks(int productId, QueryPaginationDto queryPaginationDto);
         Task<FeedBack?> GetFeedBackByFeedBackId(string userId, int feedbackId);
         Task<FeedBack?> GetFeedBack(int productId, int feedbackId);
         Task<FeedBack> CreateFeedBack(FeedBack feedback);

@@ -6,7 +6,7 @@ using System.Net.NetworkInformation;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WebSale.Dto.ProductDetails;
-using WebSale.Dto.Products;
+using WebSale.Dto.QueryDto;
 using WebSale.Interfaces;
 using WebSale.Models;
 using WebSale.Respository;
@@ -64,7 +64,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("products")]
-        public async Task<IActionResult> GetProducts([FromQuery] QueryProducts queryProducts)
+        public async Task<IActionResult> GetProducts([FromQuery] QueryFindSoftPaginationDto queryProducts)
         {
             var status = new Status();
             var products = await _productRepository.GetProducts(queryProducts);

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WebSale.Dto.Auth;
+using WebSale.Dto.QueryDto;
 using WebSale.Dto.Users;
 using WebSale.Extensions;
 using WebSale.Interfaces;
@@ -29,9 +30,9 @@ namespace WebSale.Controllers
 
         [Authorize]
         [HttpGet("users")]
-        public async Task<IActionResult> GetAllUser()
+        public async Task<IActionResult> GetAllUser([FromQuery] QueryFindSoftPaginationDto queryUsers)
         {
-            var users = await _userRepository.GetUsers();
+            var users = await _userRepository.GetUsers(queryUsers);
             return Ok(users);
         }
 

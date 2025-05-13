@@ -1,8 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.EntityFrameworkCore;
 using WebSale.Data;
 using WebSale.Dto.Addresses;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
 using WebSale.Interfaces;
 using WebSale.Models;
+using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 
 namespace WebSale.Respository
 {
@@ -31,13 +35,63 @@ namespace WebSale.Respository
             return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses.Where(ud => ud.IsDefault)).Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 
-        public async Task<ICollection<User>> GetUsers()
+        public async Task<PageResult<User>> GetUsers(QueryFindSoftPaginationDto queryUsers)
         {
-            return await _context.Users.Include(u => u.Role).ToListAsync();
-            // sap xep va phan trang
-            //.OrderBy(s => s.Name)
-            //.Skip((pageNumber - 1) * pageSize)
-            //.Take(pageSize)
+            var query = _context.Users.Include(u => u.Role).AsQueryable();
+
+            var totalCount = await query.CountAsync();
+
+            // Sắp xếp
+            if (!string.IsNullOrEmpty(queryUsers.SortBy))
+            {
+                query = queryUsers.SortBy.ToLower() switch
+                {
+                    "email" => queryUsers.isDecsending
+                        ? query.OrderByDescending(p => p.Email)
+                        : query.OrderBy(p => p.Email),
+                    "name" => queryUsers.isDecsending
+                        ? query.OrderByDescending(p => p.FirstName)
+                    : query.OrderBy(p => p.FirstName),
+                    "phone" => queryUsers.isDecsending
+                        ? query.OrderByDescending(p => p.Phone)
+                    : query.OrderBy(p => p.Phone),
+
+                    _ => query
+                };
+            }
+
+            // Phân trang trước khi lọc
+            if (queryUsers.PageNumber > 0 && queryUsers.PageSize > 0)
+            {
+                query = query
+                    .Skip((queryUsers.PageNumber - 1) * queryUsers.PageSize)
+                    .Take(queryUsers.PageSize);
+            }
+
+            // Lấy dữ liệu từ DB
+            var resUsers = await query.ToListAsync();
+
+            if (!string.IsNullOrEmpty(queryUsers.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryUsers.Name.ToLower());
+
+                resUsers = resUsers.Where(p =>
+                    (!string.IsNullOrEmpty(p.FirstName) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.FirstName.ToLower()).Contains(keyword))
+                    ||
+                    (!string.IsNullOrEmpty(p.LastName) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.LastName.ToLower()).Contains(keyword))
+                ).ToList();
+            }
+
+
+            return new PageResult<User>
+            {
+                TotalCount = totalCount,
+                PageNumber = queryUsers.PageNumber,
+                PageSize = queryUsers.PageSize,
+                Datas = resUsers
+            };
         }
 
         public async Task<bool> UpdateUser(User user)

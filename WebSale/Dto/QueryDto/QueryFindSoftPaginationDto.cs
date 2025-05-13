@@ -1,6 +1,6 @@
-﻿namespace WebSale.Dto.Products
+﻿namespace WebSale.Dto.QueryDto
 {
-    public class QueryProducts
+    public class QueryFindSoftPaginationDto
     {
         public string Name { get; set; } = string.Empty;
         public string? SortBy { get; set; } = null;

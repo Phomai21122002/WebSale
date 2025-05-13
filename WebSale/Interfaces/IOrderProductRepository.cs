@@ -1,4 +1,7 @@
-﻿using WebSale.Dto.Orders;
+﻿using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebSale.Dto.Orders;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
 using WebSale.Models;
 
 namespace WebSale.Interfaces
@@ -9,8 +12,8 @@ namespace WebSale.Interfaces
         Task<Order> GetOrderByUserId(string userId, int orderId);
         Task<Order> GetOrderById(int orderId);
         Task<OrderResultDetailDto> GetOrderResultByUserId(string userId, int orderId);
-        Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId, int status);
-        Task<ICollection<OrderResultDto>> GetOrdersResultByAdmin(int status);
+        Task<PageResult<OrderResultDto>> GetOrdersResultByUserId(string userId, int status, QueryFindPaginationDto queryOrders);
+        Task<PageResult<OrderResultDto>> GetOrdersResultByAdmin(int status, QueryFindSoftPaginationDto queryOrders);
         Task<ICollection<Order>> GetOrdersByUserId(string userId);
         Task<Order> CreateOrder(Order order); 
         Task<Order> UpdateOrder(Order order);

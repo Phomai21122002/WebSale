@@ -5,6 +5,8 @@ using System.Security.Claims;
 using WebSale.Dto.Categories;
 using WebSale.Dto.Feedbacks;
 using WebSale.Dto.ProductDetails;
+using WebSale.Dto.Products;
+using WebSale.Dto.QueryDto;
 using WebSale.Interfaces;
 using WebSale.Models;
 using WebSale.Respository;
@@ -69,7 +71,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("feedbacks")]
-        public async Task<IActionResult> GetFeedBacks([FromQuery] string inputUserId, [FromQuery] int productId)
+        public async Task<IActionResult> GetFeedBacks([FromQuery] string inputUserId, [FromQuery] int productId, [FromQuery] QueryPaginationDto queryPaginationDto)
         {
             var status = new Status();
             try
@@ -82,7 +84,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var feedbacks = await _feedBackRepository.GetFeedBacks(productId);
+                var feedbacks = await _feedBackRepository.GetFeedBacks(productId, queryPaginationDto);
                 if (feedbacks == null)
                 {
                     status.StatusCode = 500;

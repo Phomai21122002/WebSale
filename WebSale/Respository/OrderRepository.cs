@@ -11,6 +11,9 @@ using WebSale.Dto.Products;
 using WebSale.Dto.Categories;
 using WebSale.Dto.Users;
 using MailKit.Search;
+using Microsoft.AspNetCore.Mvc.RazorPages;
+using WebSale.Extensions;
+using WebSale.Dto.QueryDto;
 
 namespace WebSale.Respository
 {
@@ -131,9 +134,9 @@ namespace WebSale.Respository
         {
             return await _dataContext.Orders.Where(c => c.User != null && c.User.Id == userId).ToListAsync();
         }
-        public async Task<ICollection<OrderResultDto>> GetOrdersResultByUserId(string userId, int status)
+        public async Task<PageResult<OrderResultDto>> GetOrdersResultByUserId(string userId, int status, QueryFindPaginationDto queryOrders)
         {
-            var orders = await _dataContext.Orders
+            var query = _dataContext.Orders
                 .Where(o => o.User != null && o.User.Id == userId && o.Status == status)
                 .Include(o => o.User)
                     .ThenInclude(ua => ua.UserAddresses)
@@ -148,9 +151,32 @@ namespace WebSale.Respository
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.Category)
                             .ThenInclude(c => c.ImageCategories)
-                .ToListAsync();
+                .AsQueryable();
 
-            return orders.Select(order => new OrderResultDto {
+            var totalCount = await query.CountAsync();
+
+            // Phân trang trước khi lọc
+            if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
+            {
+                query = query
+                    .Skip((queryOrders.PageNumber - 1) * queryOrders.PageSize)
+                    .Take(queryOrders.PageSize);
+            }
+
+            // Lấy dữ liệu từ DB
+            var orders = await query.ToListAsync();
+
+            if (!string.IsNullOrEmpty(queryOrders.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
+                orders = orders.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
+                ).ToList();
+            }
+
+            var resultOrders = orders.Select(order => new OrderResultDto
+            {
                 Id = order.Id,
                 Name = order.Name,
                 Status = order.Status,
@@ -178,13 +204,21 @@ namespace WebSale.Respository
                     .ToList(),
                     Role = order.User.Role
                 } : null,
-               
+
             }).ToList();
+
+            return new PageResult<OrderResultDto>
+            {
+                TotalCount = totalCount,
+                PageNumber = queryOrders.PageNumber,
+                PageSize = queryOrders.PageSize,
+                Datas = resultOrders
+            };
         }
 
-        public async Task<ICollection<OrderResultDto>> GetOrdersResultByAdmin(int status)
+        public async Task<PageResult<OrderResultDto>> GetOrdersResultByAdmin(int status, QueryFindSoftPaginationDto queryOrders)
         {
-            var orders = await _dataContext.Orders
+            var query = _dataContext.Orders
                 .Where(o => o.Status == status)
                 .Include(o => o.User)
                     .ThenInclude(ua => ua.UserAddresses)
@@ -199,9 +233,46 @@ namespace WebSale.Respository
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.Category)
                             .ThenInclude(c => c.ImageCategories)
-                .ToListAsync();
+                .AsQueryable();
 
-            return orders.Select(order => new OrderResultDto
+            var totalCount = await query.CountAsync();
+
+            // Sắp xếp
+            if (!string.IsNullOrEmpty(queryOrders.SortBy))
+            {
+                query = queryOrders.SortBy.ToLower() switch
+                {
+                    "date" => queryOrders.isDecsending
+                        ? query.OrderByDescending(p => p.CreatedAt)
+                        : query.OrderBy(p => p.CreatedAt),
+
+                    "name" => queryOrders.isDecsending
+                        ? query.OrderByDescending(p => p.Name)
+                        : query.OrderBy(p => p.Name),
+
+                    _ => query // nếu không khớp sortBy thì không sắp xếp
+                };
+            }
+
+            if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
+            {
+                query = query
+                    .Skip((queryOrders.PageNumber - 1) * queryOrders.PageSize)
+                    .Take(queryOrders.PageSize);
+            }
+
+            var orders = await query.ToListAsync();
+
+            if (!string.IsNullOrEmpty(queryOrders.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
+                orders = orders.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
+                ).ToList();
+            }
+
+            var resultOrders = orders.Select(order => new OrderResultDto
             {
                 Id = order.Id,
                 Name = order.Name,
@@ -231,6 +302,14 @@ namespace WebSale.Respository
                     Role = order.User.Role
                 } : null,
             }).ToList();
+
+            return new PageResult<OrderResultDto>
+            {
+                TotalCount = totalCount,
+                PageNumber = queryOrders.PageNumber,
+                PageSize = queryOrders.PageSize,
+                Datas = resultOrders
+            };
         }
 
         public async Task<Order?> GetOrderByUserId(string userId, int orderId)

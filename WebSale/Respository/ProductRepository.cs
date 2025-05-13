@@ -13,6 +13,7 @@ using WebSale.Dto.Products;
 using WebSale.Dto.Categories;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using WebSale.Extensions;
+using WebSale.Dto.QueryDto;
 
 namespace WebSale.Respository
 {
@@ -45,7 +46,7 @@ namespace WebSale.Respository
             return await _dataContext.Products.Include(p => p.ImageProducts).Include(p => p.Category).Include(p => p.ProductDetail).FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<PageResult<ProductResultDto>> GetProducts(QueryProducts queryProducts)
+        public async Task<PageResult<ProductResultDto>> GetProducts(QueryFindSoftPaginationDto queryProducts)
         {
             var query = _dataContext.Products
                 .Include(p => p.ImageProducts)
@@ -54,17 +55,7 @@ namespace WebSale.Respository
                 .Include(p => p.ProductDetail)
                 .AsQueryable();
 
-            // Lọc theo tên trước
-            if (!string.IsNullOrEmpty(queryProducts.Name))
-            {
-                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryProducts.Name.ToLower());
-                query = query.Where(p =>
-                    !string.IsNullOrEmpty(p.Name) &&
-                    RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)
-                );
-            }
-
-            var totalCount = await query.CountAsync(); // tổng số sản phẩm sau lọc
+            var totalCount = await query.CountAsync();
 
             // Sắp xếp
             if (!string.IsNullOrEmpty(queryProducts.SortBy))
@@ -93,6 +84,14 @@ namespace WebSale.Respository
             // Lấy dữ liệu từ DB
             var resProducts = await query.ToListAsync();
 
+            // Lọc theo tên trước
+            if (!string.IsNullOrEmpty(queryProducts.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryProducts.Name.ToLower());
+                resProducts = resProducts.Where(p =>
+                    !string.IsNullOrEmpty(p.Name) && RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)
+                ).ToList();
+            }
 
             // Ánh xạ sang DTO
             var resultProduct = resProducts.Select(resProduct => new ProductResultDto

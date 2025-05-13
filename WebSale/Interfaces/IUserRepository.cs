@@ -1,11 +1,13 @@
 ﻿using WebSale.Dto.Addresses;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
 using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface IUserRepository
     {
-        Task<ICollection<User>> GetUsers();
+        Task<PageResult<User>> GetUsers(QueryFindSoftPaginationDto queryUsers);
         Task<User?> GetUser(string userId);
         Task<UserResultDto?> GetResultUser(string userId);
         Task<bool> UserExists(string userId);

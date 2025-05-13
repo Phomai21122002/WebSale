@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Security.Claims;
 using WebSale.Dto.Orders;
+using WebSale.Dto.QueryDto;
 using WebSale.Interfaces;
 using WebSale.Models;
 using WebSale.Models.Vnpay;
@@ -73,7 +74,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("orders")]
-        public async Task<IActionResult> GetOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus)
+        public async Task<IActionResult> GetOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus, [FromQuery] QueryFindPaginationDto queryOrders)
         {
             var status = new Status();
             try
@@ -86,7 +87,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var order = await _orderRepository.GetOrdersResultByUserId(inputUserId, inputStatus);
+                var order = await _orderRepository.GetOrdersResultByUserId(inputUserId, inputStatus, queryOrders);
                 if (order == null)
                 {
                     status.StatusCode = 500;
@@ -104,7 +105,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("admin/orders")]
-        public async Task<IActionResult> GetAdminOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus)
+        public async Task<IActionResult> GetAdminOrders([FromQuery] string inputUserId, [FromQuery] int inputStatus, [FromQuery] QueryFindSoftPaginationDto queryOrders)
         {
             var status = new Status();
             try
@@ -117,7 +118,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var order = await _orderRepository.GetOrdersResultByAdmin(inputStatus);
+                var order = await _orderRepository.GetOrdersResultByAdmin(inputStatus, queryOrders);
                 if (order == null)
                 {
                     status.StatusCode = 500;
