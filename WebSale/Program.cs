@@ -11,7 +11,9 @@ using WebSale.Data;
 using WebSale.Dto.Email;
 using WebSale.Interfaces;
 using WebSale.Models;
+using WebSale.Models.Momo;
 using WebSale.Respository;
+using WebSale.Services.Momo;
 using WebSale.Services.Vnpay;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +46,9 @@ builder.Services.AddScoped<IAddressUserRepository, AddressUserRepository>();
 builder.Services.AddScoped<AddressDataSeeder>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();
+//Connect MomoApi
+builder.Services.Configure<MomoOptionModel>(builder.Configuration.GetSection("MomoAPI"));
+builder.Services.AddScoped<IMomoService, MomoService>();
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -153,6 +158,7 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Add data address
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;

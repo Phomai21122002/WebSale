@@ -8,6 +8,7 @@ using WebSale.Models.Vnpay;
 using WebSale.Services.Vnpay;
 using static System.Net.Mime.MediaTypeNames;
 using WebSale.Interfaces;
+using WebSale.Services.Momo;
 
 namespace WebSale.Controllers
 {
@@ -15,17 +16,25 @@ namespace WebSale.Controllers
     [ApiController]
     public class PaymentController : Controller
     {
-
+        private readonly IMomoService _momoService;
         private readonly IVnPayService _vnPayService;
         private readonly IOrderRepository _orderRepository;
         private readonly ICartRepository _cartRepository;
         private readonly IProductDetailRepository _productDetailRepository;
-        public PaymentController(IVnPayService vnPayService, IOrderRepository orderRepository, ICartRepository cartRepository, IProductDetailRepository productDetailRepository)
+        public PaymentController(IMomoService momoService, IVnPayService vnPayService, IOrderRepository orderRepository, ICartRepository cartRepository, IProductDetailRepository productDetailRepository)
         {
+            _momoService = momoService;
             _vnPayService = vnPayService;
             _orderRepository = orderRepository;
             _cartRepository = cartRepository;
             _productDetailRepository = productDetailRepository;
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> PaymentMomoCallback()
+        {
+            var res = _momoService.PaymentExecuteAsync(HttpContext.Request.Query);
+            return Ok(res);
         }
         
         [HttpGet]
