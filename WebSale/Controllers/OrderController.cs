@@ -136,7 +136,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("ProductInOrders")]
-        public async Task<IActionResult> GetOrderProductsCancel([FromQuery] string inputUserId, [FromQuery] int inputStatus)
+        public async Task<IActionResult> GetOrderProductsCancel([FromQuery] string inputUserId, [FromQuery] int inputStatus, [FromQuery] QueryPaginationDto queryPaginationDto)
         {
             var status = new Status();
             try
@@ -149,7 +149,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var orderProducts = await _orderProductRepository.GetProductOrdersResultCanceled(inputUserId, inputStatus);
+                var orderProducts = await _orderProductRepository.GetProductOrdersResultCanceled(inputUserId, inputStatus, queryPaginationDto);
                 if (orderProducts == null)
                 {
                     status.StatusCode = 500;

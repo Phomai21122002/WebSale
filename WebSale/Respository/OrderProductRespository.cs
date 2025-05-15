@@ -5,6 +5,8 @@ using WebSale.Dto.Addresses;
 using WebSale.Dto.Categories;
 using WebSale.Dto.Orders;
 using WebSale.Dto.Products;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
 using WebSale.Interfaces;
 using WebSale.Models;
 
@@ -49,9 +51,9 @@ namespace WebSale.Respository
             return await _dataContext.OrderProducts.Where(op => op.Order.User != null && op.Order.User.Id == userId && op.OrderId == orderId).ToListAsync();
         }
 
-        public async Task<ICollection<OrderProductCancelDto>> GetProductOrdersResultCanceled(string userId, int status)
+        public async Task<PageResult<OrderProductCancelDto>> GetProductOrdersResultCanceled(string userId, int status, QueryPaginationDto queryPaginationDto)
         {
-            var canceledProducts = await _dataContext.OrderProducts
+            var query = _dataContext.OrderProducts
                 .Where(op =>
                     op.Order.User != null &&
                     op.Order.User.Id == userId &&
@@ -66,7 +68,18 @@ namespace WebSale.Respository
                 .Include(op => op.Product)
                     .ThenInclude(p => p.Category)
                         .ThenInclude(c => c.ImageCategories)
-                .ToListAsync();
+                .AsQueryable();
+
+            var totalCount = await query.CountAsync();
+
+            if (queryPaginationDto.PageNumber > 0 && queryPaginationDto.PageSize > 0)
+            {
+                query = query
+                    .Skip((queryPaginationDto.PageNumber - 1) * queryPaginationDto.PageSize)
+                    .Take(queryPaginationDto.PageSize);
+            }
+
+            var canceledProducts = await query.ToListAsync();
 
             var result = canceledProducts.Select(op => new OrderProductCancelDto
             {
@@ -109,8 +122,13 @@ namespace WebSale.Respository
                 }
             }).ToList();
 
-            return result;
-
+            return new PageResult<OrderProductCancelDto>
+            {
+                TotalCount = totalCount,
+                PageNumber = queryPaginationDto.PageNumber,
+                PageSize = queryPaginationDto.PageSize,
+                Datas = result
+            };
         }
 
         public Task<bool> OrderProductExists(int id)

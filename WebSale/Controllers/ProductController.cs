@@ -71,6 +71,14 @@ namespace WebSale.Controllers
             return Ok(products);
         }
 
+        [HttpGet("productsByIdCategory")]
+        public async Task<IActionResult> GetProductsByIdCategory([FromQuery] int categoryId, [FromQuery] QuerySoftPaginationDto queryProducts)
+        {
+            var status = new Status();
+            var products = await _productRepository.GetProductsByIdCategory(categoryId, queryProducts);
+            return Ok(products);
+        }
+
         [HttpPost]
         public async Task<IActionResult> CreateProduct([FromQuery] int categoryId, [FromBody] ProductDetailDto productDetailDto)
         {

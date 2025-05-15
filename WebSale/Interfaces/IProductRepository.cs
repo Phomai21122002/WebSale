@@ -8,6 +8,7 @@ namespace WebSale.Interfaces
     public interface IProductRepository
     {
         Task<PageResult<ProductResultDto>> GetProducts(QueryFindSoftPaginationDto queryProducts);
+        Task<PageResult<ProductResultDto>> GetProductsByIdCategory(int categoryId, QuerySoftPaginationDto queryProducts);
         Task<Product?> GetProduct(int id);
         Task<int?> GetIdProductBySlug(string slug);
         Task<ProductResultDto?> GetProductResult(int id);
