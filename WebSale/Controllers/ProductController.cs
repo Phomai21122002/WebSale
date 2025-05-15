@@ -202,9 +202,7 @@ namespace WebSale.Controllers
                 
                 if (!productDetail.UpdateDescriptionFile(productDetailDto.DescriptionDetail, productDetail.DescriptionDetail))
                 {
-                    status.StatusCode = 500;
-                    status.Message = "Description detail file not found.";
-                    return BadRequest(status);
+                    productDetail.SaveDescriptionToFile();
                 }
                 _mapper.Map(productDetailDto, productDetail);
 
