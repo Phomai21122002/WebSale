@@ -20,12 +20,14 @@ namespace WebSale.Controllers
         private readonly IMapper _mapper;
         private readonly IUserRepository _userRepository;
         private readonly ILoginRepository _loginRepository;
+        private readonly IRoleRepository _roleRepository;
 
-        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository)
+        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository, IRoleRepository roleRepository)
         {
             _mapper = mapper;
             _userRepository = userRepository;
             _loginRepository = loginRepository;
+            _roleRepository = roleRepository;
         }
 
         [Authorize]
@@ -96,6 +98,44 @@ namespace WebSale.Controllers
                 return BadRequest(status);
             }
 
+            return Ok(user);
+        }
+
+        [Authorize]
+        [HttpPut("user")]
+        public async Task<IActionResult> UpdateUser([FromQuery] string userId, [FromBody] UserUpdateDto updateUser)
+        {
+            var status = new Status();
+            if (updateUser == null)
+            {
+                status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
+            if (!await _userRepository.UserExists(userId))
+            {
+                status.StatusCode = 402;
+                status.Message = "User does not exists";
+                return BadRequest(status);
+            }
+            if (!await _roleRepository.RoleIdExists(updateUser.IdRole))
+            {
+                status.StatusCode = 402;
+                status.Message = "Role does not exists";
+                return BadRequest(status);
+            }
+            var user = await _userRepository.GetUser(userId);
+            var role = await _roleRepository.GetRole(updateUser.IdRole);
+
+            _mapper.Map(updateUser, user);
+            user.Role = role;
+
+            if (!await _userRepository.UpdateUser(user))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
             return Ok(user);
         }
 

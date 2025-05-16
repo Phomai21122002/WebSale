@@ -6,6 +6,7 @@ namespace WebSale.Dto.Orders
     public enum OrderPaymentStatus
     {
         COD,
-        VnPay
+        VnPay,
+        MoMo
     }
 }

@@ -7,8 +7,10 @@ using WebSale.Dto.Orders;
 using WebSale.Dto.QueryDto;
 using WebSale.Interfaces;
 using WebSale.Models;
+using WebSale.Models.Momo;
 using WebSale.Models.Vnpay;
 using WebSale.Respository;
+using WebSale.Services.Momo;
 using WebSale.Services.Vnpay;
 
 namespace WebSale.Controllers
@@ -24,8 +26,9 @@ namespace WebSale.Controllers
         private readonly IOrderProductRepository _orderProductRepository;
         private readonly IProductDetailRepository _productDetailRepository;
         private readonly IVnPayService _vpnPayService;
+        private readonly IMomoService _momoService;
 
-        public OrderController(IMapper mapper, IOrderRepository orderRepository, ICartRepository cartRepository, IUserRepository userRepository, IOrderProductRepository orderProductRepository, IProductDetailRepository productDetailRepository, IVnPayService vnPayService)
+        public OrderController(IMapper mapper, IOrderRepository orderRepository, ICartRepository cartRepository, IUserRepository userRepository, IOrderProductRepository orderProductRepository, IProductDetailRepository productDetailRepository, IVnPayService vnPayService, IMomoService momoService)
         {
             _mapper = mapper;
             _orderRepository = orderRepository;
@@ -34,6 +37,7 @@ namespace WebSale.Controllers
             _orderProductRepository = orderProductRepository;
             _productDetailRepository = productDetailRepository;
             _vpnPayService = vnPayService;
+            _momoService = momoService;
         }
 
         [HttpGet("order")]
@@ -237,6 +241,17 @@ namespace WebSale.Controllers
                     };
                     var url = _vpnPayService.CreatePaymentUrl(paymentInfo, HttpContext);
 
+                    return Ok(new { PaymentUrl = url });
+                } else if(OrderPaymentStatus.MoMo == createOrderDto.PaymentMethod)
+                {
+                    var momoInfo = new OrderInfo
+                    {
+                        FullName = user.FirstName + " " + user.LastName,
+                        Amount = newOrder.Total,
+                        OrderId = newOrder.Id,
+                        OrderInformation = $"Payment for order #{newOrder.Id}"
+                    };
+                    var url = _momoService.CreatePaymentAsync(momoInfo);
                     return Ok(new { PaymentUrl = url });
                 }
                 else

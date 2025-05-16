@@ -14,9 +14,8 @@ namespace WebSale.Services.Momo
     {
         private readonly IOptions<MomoOptionModel> _options;
         public MomoService(IOptions<MomoOptionModel> options) { _options = options; }
-        public async Task<MomoCreatePaymentResponseModel> CreatePaymentAsync(OrderInfo model)
+        public async Task<string> CreatePaymentAsync(OrderInfo model)
         {
-            model.OrderId = DateTime.UtcNow.Ticks.ToString();
             model.OrderInformation = "Khách hàng: " + model.FullName + ". Nội dung: " + model.OrderInformation;
             var rawData =
                 $"partnerCode={_options.Value.PartnerCode}" +
@@ -55,7 +54,7 @@ namespace WebSale.Services.Momo
 
             var response = await client.ExecuteAsync(request);
             var momoResponse = JsonConvert.DeserializeObject<MomoCreatePaymentResponseModel>(response.Content);
-            return momoResponse;
+            return momoResponse.PayUrl;
 
         }
 
@@ -67,10 +66,9 @@ namespace WebSale.Services.Momo
 
             return new MomoExecuteResponseModel()
             {
-                Amount = amount,
-                OrderId = orderId,
+                Amount = double.Parse(amount),
+                OrderId = int.Parse(orderId),
                 OrderInfo = orderInfo
-
             };
         }
 

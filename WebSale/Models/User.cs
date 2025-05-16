@@ -33,6 +33,7 @@ namespace WebSale.Models
         public ICollection<Cart>? Carts { get; set; }
         public ICollection<Order>? Orders { get; set; }
         public ICollection<FeedBack>? FeedBacks { get; set; }
+        public ICollection<Bill>? Bills { get; set; }
         public Role? Role { get; set; }
 
     }

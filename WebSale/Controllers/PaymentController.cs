@@ -30,11 +30,19 @@ namespace WebSale.Controllers
             _productDetailRepository = productDetailRepository;
         }
 
-        [HttpGet]
+        [HttpGet("momo")]
         public async Task<IActionResult> PaymentMomoCallback()
         {
             var res = _momoService.PaymentExecuteAsync(HttpContext.Request.Query);
-            return Ok(res);
+            var requestQuery = HttpContext.Request.Query;
+            if(requestQuery["resultCode"] == 0)
+            {
+                return Ok(true);
+            }
+            else
+            {
+                return Ok(false);
+            }
         }
         
         [HttpGet]

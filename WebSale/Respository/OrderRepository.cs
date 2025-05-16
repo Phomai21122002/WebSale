@@ -66,6 +66,8 @@ namespace WebSale.Respository
             var order = await _dataContext.Orders
                 .Where(o => o.Id == orderId && o.User != null && o.User.Id == userId)
                 .Include(o => o.User)
+                    .ThenInclude(op => op.UserAddresses)
+                        .ThenInclude(op => op.Address)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
@@ -98,6 +100,13 @@ namespace WebSale.Respository
                     Email = order.User.Email,
                     Phone = order.User.Phone,
                     url = order.User.url,
+                    Addresses = order.User.UserAddresses!.Select(ud => new AddressDto
+                    {
+                        Id = ud!.Address!.Id,
+                        Name = ud!.Address.Name,
+                        Code = ud!.Address.Code,
+                        IsDefault = ud!.IsDefault
+                    }).ToList()
                 },
                 Products = order.OrderProducts.Where(op => op.Status == order.Status).Select(op => new ProductOrderResultDto
                 {

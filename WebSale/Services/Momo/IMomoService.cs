@@ -4,7 +4,7 @@ namespace WebSale.Services.Momo
 {
     public interface IMomoService
     {
-        Task<MomoCreatePaymentResponseModel> CreatePaymentAsync(OrderInfo model);
+        Task<string> CreatePaymentAsync(OrderInfo model);
         MomoExecuteResponseModel PaymentExecuteAsync(IQueryCollection collection);
     }
 }
