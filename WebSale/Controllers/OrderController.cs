@@ -247,12 +247,12 @@ namespace WebSale.Controllers
                     var momoInfo = new OrderInfo
                     {
                         FullName = user.FirstName + " " + user.LastName,
-                        Amount = newOrder.Total,
-                        OrderId = newOrder.Id,
+                        Amount = newOrder.Total.ToString(),
+                        OrderId = newOrder.Id.ToString(),
                         OrderInformation = $"Payment for order #{newOrder.Id}"
                     };
-                    var url = _momoService.CreatePaymentAsync(momoInfo);
-                    return Ok(new { PaymentUrl = url });
+                    var resultMomo = await _momoService.CreatePaymentAsync(momoInfo);
+                    return Ok(new { PaymentUrl = resultMomo.PayUrl });
                 }
                 else
                 {

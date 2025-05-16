@@ -37,10 +37,12 @@ namespace WebSale.Controllers
             var requestQuery = HttpContext.Request.Query;
             if(requestQuery["resultCode"] == 0)
             {
+                Console.WriteLine("thanh cong");
                 return Ok(true);
             }
             else
             {
+                Console.WriteLine("that bai");
                 return Ok(false);
             }
         }
