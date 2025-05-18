@@ -6,20 +6,17 @@ using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
-    public interface IOrderRepository
+    public interface IOrderProductRepository
     {
-        Task<ICollection<Order>> GetOrders(string userId);
-        Task<Order> GetOrderByUserId(string userId, int orderId);
-        Task<Order> GetOrderById(int orderId);
-        Task<OrderResultDetailDto> GetOrderResultByUserId(string userId, int orderId);
-        Task<PageResult<OrderResultDto>> GetOrdersResultByUserId(string userId, int status, QueryFindPaginationDto queryOrders);
-        Task<PageResult<OrderResultDto>> GetOrdersResultByAdmin(int status, QueryFindSoftPaginationDto queryOrders);
-        Task<ICollection<Order>> GetOrdersByUserId(string userId);
-        Task<Order> CreateOrder(Order order); 
-        Task<Order> UpdateOrder(Order order);
-        Task<bool> DeleteOrder(Order order);
+        Task<OrderProduct> GetOrderProduct(string userId, int orderId, int productId);
+        Task<ICollection<OrderProduct>> GetOrderProducts(string userId, int orderId);
+        Task<PageResult<OrderProductCancelDto>> GetProductOrdersResultCanceled(string userId, int status, QueryPaginationDto queryPaginationDto);
+        Task<ICollection<OrderProduct>> CreateOrderProduct(ICollection<OrderProduct> orderProduct);
+        Task<OrderProduct> UpdateOrderProduct(OrderProduct orderProduct);
+        Task<ICollection<OrderProduct>> UpdateOrderProducts(ICollection<OrderProduct> orderProducts);
+        Task<bool> DeleteOrderProduct(OrderProduct orderProduct);
+        Task<bool> DeleteOrderProducts(ICollection<OrderProduct> orderProducts);
         Task<bool> Save();
-        Task<bool> OrderExists(string userId,int id);
-        Task<bool> ProductOfOrderExists(string userId,int orderId, int productId);
+        Task<bool> OrderProductExists(int id);
     }
 }

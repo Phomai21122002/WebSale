@@ -43,6 +43,8 @@ builder.Services.AddScoped<IOrderProductRepository, OrderProductRespository>();
 builder.Services.AddScoped<IImageFeedBackRepository, ImageFeedBackRepository>();
 builder.Services.AddScoped<IAddressRepository, AddressRepository>();
 builder.Services.AddScoped<IAddressUserRepository, AddressUserRepository>();
+builder.Services.AddScoped<IBillRepository, BillRepository>();
+builder.Services.AddScoped<IBillDetailRepository, BillDetailRepository>();
 builder.Services.AddScoped<AddressDataSeeder>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<IVnPayService, VnPayService>();

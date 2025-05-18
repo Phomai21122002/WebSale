@@ -92,6 +92,7 @@ namespace WebSale.Controllers
 
                 order.Status = (int)OrderStatus.Pending;
                 order.Vnpay = vnpayModel;
+                order.IsPayment = true;
                 order.CreatedAt = DateTime.Now;
 
                 var updateResult = await _orderRepository.UpdateOrder(order);
@@ -139,6 +140,13 @@ namespace WebSale.Controllers
                     OrderId = order.Id,
                     TransactionId = response.TransactionId
                 });
+            }
+
+            if (!await _orderRepository.DeleteOrder(order))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong while deleting order";
+                return BadRequest(status);
             }
 
             return Ok(new

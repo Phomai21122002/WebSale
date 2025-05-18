@@ -46,17 +46,10 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                if (inputUserId == null || orderId == null)
+                if (inputUserId == null || !await _orderRepository.OrderExists(inputUserId, orderId))
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
-                    return BadRequest(status);
-                }
-
-                if (!await _orderRepository.OrderExists(inputUserId, orderId))
-                {
-                    status.StatusCode = 400;
-                    status.Message = "Order does not exists";
                     return BadRequest(status);
                 }
 
@@ -177,7 +170,7 @@ namespace WebSale.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (userId != inputUserId || createOrderDto == null)
+                if (userId != inputUserId || createOrderDto == null || createOrderDto.CartsId == null || !createOrderDto.CartsId.Any())
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
@@ -185,12 +178,6 @@ namespace WebSale.Controllers
                 }
 
                 var user = await _userRepository.GetUser(userId);
-                if (createOrderDto.CartsId == null || !createOrderDto.CartsId.Any())
-                {
-                    status.StatusCode = 400;
-                    status.Message = "No cart items selected for order.";
-                    return BadRequest(status);
-                }
                 var carts = await _cartRepository.GetCartsByCartsId(inputUserId, createOrderDto);
 
                 if(carts.Count == 0)
@@ -205,12 +192,20 @@ namespace WebSale.Controllers
                     Name = $"Order_{DateTime.Now:yyyyMMddHHmmss}",
                     Total = carts.Sum(cart => cart.Quantity * (cart.Product?.Price ?? 0)),
                     Status = (int)OrderStatus.Pending,
+                    IsPayment = false,
                     User = user,
                     PaymentMethod = createOrderDto.PaymentMethod.ToString(),
                     CreatedAt = DateTime.Now,
                 };
+
                 var newOrder = await _orderRepository.CreateOrder(order);
-                
+                if (newOrder == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while creating order of user";
+                    return BadRequest(status);
+                }
+
                 var ordersProduct = carts.Select(c => new OrderProduct
                 {
                     ProductId = c.ProductId,
@@ -221,14 +216,8 @@ namespace WebSale.Controllers
                     Status = (int)OrderStatus.Pending,
                     CreatedAt = DateTime.Now,
                 }).ToList();
-
-                if (newOrder == null)
-                {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong while creating order of user";
-                    return BadRequest(status);
-                }
-                var newOrderProduct = await _orderProductRepository.CreateOrderProduct(ordersProduct);
+                
+                await _orderProductRepository.CreateOrderProduct(ordersProduct);
 
                 if (OrderPaymentStatus.VnPay == createOrderDto.PaymentMethod) {
                     var paymentInfo = new PaymentInformationModel

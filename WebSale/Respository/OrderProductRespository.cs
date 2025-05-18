@@ -33,6 +33,12 @@ namespace WebSale.Respository
             throw new NotImplementedException();
         }
 
+        public async Task<bool> DeleteOrderProducts(ICollection<OrderProduct> orderProducts)
+        {
+            _dataContext.RemoveRange(orderProducts);
+            return await Save();
+        }
+
         public async Task<OrderProduct?> GetOrderProduct(string userId, int orderId, int productId)
         {
             return await _dataContext.OrderProducts
@@ -48,7 +54,11 @@ namespace WebSale.Respository
 
         public async Task<ICollection<OrderProduct>> GetOrderProducts(string userId, int orderId)
         {
-            return await _dataContext.OrderProducts.Where(op => op.Order.User != null && op.Order.User.Id == userId && op.OrderId == orderId).ToListAsync();
+            return await _dataContext.OrderProducts
+                .Where(op => op.Order.User != null && op.Order.User.Id == userId && op.OrderId == orderId)
+                .Include(op => op.Product)
+                    .ThenInclude(p => p.ProductDetail)
+                .ToListAsync();
         }
 
         public async Task<PageResult<OrderProductCancelDto>> GetProductOrdersResultCanceled(string userId, int status, QueryPaginationDto queryPaginationDto)
@@ -136,9 +146,9 @@ namespace WebSale.Respository
             throw new NotImplementedException();
         }
 
-        public Task<bool> Save()
+        public async Task<bool> Save()
         {
-            throw new NotImplementedException();
+            return await _dataContext.SaveChangesAsync() > 0;
         }
 
         public async Task<OrderProduct> UpdateOrderProduct(OrderProduct orderProduct)
