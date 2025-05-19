@@ -6,6 +6,7 @@ namespace WebSale.Models
     {
         [Key]
         public int Id { get; set; }
+        public string? NameOrder { get; set; }
         public string? PaymentMethod { get; set; }
         public User? User { get; set; }
         public ICollection<BillDetail>? BillDetails { get; set; }

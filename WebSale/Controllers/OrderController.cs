@@ -387,22 +387,20 @@ namespace WebSale.Controllers
                 var orderProducts = await _orderProductRepository.GetOrderProducts(inputUserId, inputOrderId);
                 var allCanceled = orderProducts.All(op => op.Status == Enum.GetNames(typeof(OrderStatus)).Length);
 
+                var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
                 if (allCanceled)
                 {
-                    var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
-                    if (order != null)
-                    {
-                        order.Status = Enum.GetNames(typeof(OrderStatus)).Length;
-                        var updatedOrder = await _orderRepository.UpdateOrder(order);
-                        if (updatedOrder == null)
-                        {
-                            status.StatusCode = 500;
-                            status.Message = "Failed to update order status";
-                            return BadRequest(status);
-                        }
-                    }
+                    order.Status = Enum.GetNames(typeof(OrderStatus)).Length;
                 }
+                order.Total -= orderProductUpdated.Product.Price * orderProductUpdated.Quantity;
 
+                var updatedOrder = await _orderRepository.UpdateOrder(order);
+                if (updatedOrder == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Failed to update order";
+                    return BadRequest(status);
+                }
                 return Ok(orderProductUpdated);
             }
             catch (Exception ex)

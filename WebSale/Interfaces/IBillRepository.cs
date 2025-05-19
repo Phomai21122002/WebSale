@@ -1,12 +1,15 @@
-﻿using WebSale.Models;
+﻿using WebSale.Dto.Bills;
+using WebSale.Dto.QueryDto;
+using WebSale.Extensions;
+using WebSale.Models;
 
 namespace WebSale.Interfaces
 {
     public interface IBillRepository
     {
-        Task<Bill> GetResultBillByUserId(string userId, int billId);
-        Task<ICollection<Bill>> GetResultsBillByUserId(string userId);
-        Task<ICollection<Bill>> GetResultsBill();
+        Task<BillResultDto> GetResultBillByUserId(string userId, int billId);
+        Task<PageResult<BillResultDto>> GetResultsBillByUserId(string userId, QueryPaginationDto queryPaginationDto);
+        Task<PageResult<BillResultDto>> GetResultsBill(QueryPaginationDto queryPaginationDto);
         Task<Bill> CreateBill(Bill bill);
         Task<bool> BillExists(string userId, int billId);
     }

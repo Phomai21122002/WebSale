@@ -91,6 +91,8 @@ namespace WebSale.Respository
                 CountProduct = order.OrderProducts
                     .Where(op => op.Status == order.Status)
                     .Sum(op => op.Quantity),
+                PaymentMethod = order.PaymentMethod,
+                IsPayment = order.IsPayment,
                 CreateOrder = order.CreatedAt,
                 User = new UserResultDto
                 {
@@ -164,6 +166,15 @@ namespace WebSale.Respository
 
             var totalCount = await query.CountAsync();
 
+            if (!string.IsNullOrEmpty(queryOrders.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
+                query = query.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
+                );
+            }
+
             // Phân trang trước khi lọc
             if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
             {
@@ -174,15 +185,6 @@ namespace WebSale.Respository
 
             // Lấy dữ liệu từ DB
             var orders = await query.ToListAsync();
-
-            if (!string.IsNullOrEmpty(queryOrders.Name))
-            {
-                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
-                orders = orders.Where(p =>
-                    (!string.IsNullOrEmpty(p.Name) &&
-                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
-                ).ToList();
-            }
 
             var resultOrders = orders.Select(order => new OrderResultDto
             {
@@ -263,6 +265,15 @@ namespace WebSale.Respository
                 };
             }
 
+            if (!string.IsNullOrEmpty(queryOrders.Name))
+            {
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
+                query = query.Where(p =>
+                    (!string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
+                );
+            }
+
             if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
             {
                 query = query
@@ -272,14 +283,7 @@ namespace WebSale.Respository
 
             var orders = await query.ToListAsync();
 
-            if (!string.IsNullOrEmpty(queryOrders.Name))
-            {
-                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
-                orders = orders.Where(p =>
-                    (!string.IsNullOrEmpty(p.Name) &&
-                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
-                ).ToList();
-            }
+            
 
             var resultOrders = orders.Select(order => new OrderResultDto
             {

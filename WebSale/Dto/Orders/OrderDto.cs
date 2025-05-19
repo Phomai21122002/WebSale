@@ -15,5 +15,6 @@ namespace WebSale.Dto.Orders
         [Range(0, long.MaxValue)]
         public long Total { get; set; }
         public DateTime? CreateOrder { get; set; }
+        
     }
 }

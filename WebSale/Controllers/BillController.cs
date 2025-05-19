@@ -63,7 +63,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("bills")]
-        public async Task<IActionResult> GetBills([FromQuery] string inputUserId)
+        public async Task<IActionResult> GetBills([FromQuery] string inputUserId, [FromQuery] QueryPaginationDto queryPaginationDto)
         {
             var status = new Status();
             try
@@ -76,7 +76,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                var bills = await _billRepository.GetResultsBillByUserId(inputUserId);
+                var bills = await _billRepository.GetResultsBillByUserId(inputUserId, queryPaginationDto);
 
                 if (bills == null)
                 {
@@ -95,12 +95,12 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("admin/bills")]
-        public async Task<IActionResult> GetAdminBills()
+        public async Task<IActionResult> GetAdminBills([FromQuery] QueryPaginationDto queryPaginationDto)
         {
             var status = new Status();
             try
             {
-                var bills = await _billRepository.GetResultsBill();
+                var bills = await _billRepository.GetResultsBill(queryPaginationDto);
 
                 if (bills == null)
                 {
@@ -124,7 +124,6 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                Console.WriteLine("1");
 
                 if (inputUserId == null || !await _orderRepository.OrderExists(inputUserId, inputOrderId))
                 {
@@ -134,10 +133,8 @@ namespace WebSale.Controllers
                 }
 
                 var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
-                Console.WriteLine("2");
 
                 var orderProducts = await _orderProductRepository.GetOrderProducts(inputUserId, inputOrderId);
-                Console.WriteLine("3");
 
                 var orderProductsNoCancel = orderProducts
                 .Where(op => op.Status != (int)OrderStatus.Cancelled)
@@ -145,6 +142,7 @@ namespace WebSale.Controllers
 
                 var bill = new Bill
                 {
+                    NameOrder = order.Name,
                     PaymentMethod = order.PaymentMethod,
                     User = order.User,
                     Vnpay = order.Vnpay,
@@ -152,7 +150,6 @@ namespace WebSale.Controllers
                 };
 
                 var newBill = await _billRepository.CreateBill(bill);
-                Console.WriteLine("4");
 
                 if (newBill == null)
                 {
@@ -173,7 +170,6 @@ namespace WebSale.Controllers
                 }).ToList();
 
                 var newBillDetails = await _billDetailRepository.CreateBillDetail(billDetails);
-                Console.WriteLine("5");
 
                 if (newBillDetails == null)
                 {
@@ -184,7 +180,6 @@ namespace WebSale.Controllers
 
                 if(orderProducts.Count == orderProductsNoCancel.Count)
                 {
-                    Console.WriteLine("6");
                     if (!await _orderRepository.DeleteOrder(order))
                     {
                         status.StatusCode = 500;
@@ -194,7 +189,6 @@ namespace WebSale.Controllers
                 }
                 else
                 {
-                    Console.WriteLine("7");
                     if (!await _orderProductRepository.DeleteOrderProducts(orderProductsNoCancel))
                     {
                         status.StatusCode = 500;
