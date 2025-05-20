@@ -161,30 +161,28 @@ namespace WebSale.Respository
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.Category)
-                            .ThenInclude(c => c.ImageCategories)
-                .AsQueryable();
+                            .ThenInclude(c => c.ImageCategories);
 
-            var totalCount = await query.CountAsync();
+            var orders = await query.ToListAsync();
+
 
             if (!string.IsNullOrEmpty(queryOrders.Name))
             {
                 var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
-                query = query.Where(p =>
-                    (!string.IsNullOrEmpty(p.Name) &&
-                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
-                );
+                orders = orders.Where(p =>
+                    !string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)).ToList();
             }
 
-            // Phân trang trước khi lọc
+            var totalCount = orders.Count;
+
             if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
             {
-                query = query
+                orders = orders
                     .Skip((queryOrders.PageNumber - 1) * queryOrders.PageSize)
-                    .Take(queryOrders.PageSize);
+                    .Take(queryOrders.PageSize)
+                    .ToList();
             }
-
-            // Lấy dữ liệu từ DB
-            var orders = await query.ToListAsync();
 
             var resultOrders = orders.Select(order => new OrderResultDto
             {
@@ -243,47 +241,44 @@ namespace WebSale.Respository
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.Category)
-                            .ThenInclude(c => c.ImageCategories)
-                .AsQueryable();
+                            .ThenInclude(c => c.ImageCategories);
 
-            var totalCount = await query.CountAsync();
-
-            // Sắp xếp
-            if (!string.IsNullOrEmpty(queryOrders.SortBy))
-            {
-                query = queryOrders.SortBy.ToLower() switch
-                {
-                    "date" => queryOrders.isDecsending
-                        ? query.OrderByDescending(p => p.CreatedAt)
-                        : query.OrderBy(p => p.CreatedAt),
-
-                    "name" => queryOrders.isDecsending
-                        ? query.OrderByDescending(p => p.Name)
-                        : query.OrderBy(p => p.Name),
-
-                    _ => query // nếu không khớp sortBy thì không sắp xếp
-                };
-            }
+            var orders = await query.ToListAsync();
 
             if (!string.IsNullOrEmpty(queryOrders.Name))
             {
                 var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryOrders.Name.ToLower());
-                query = query.Where(p =>
-                    (!string.IsNullOrEmpty(p.Name) &&
-                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword))
-                );
+                orders = orders.Where(p =>
+                    !string.IsNullOrEmpty(p.Name) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)).ToList();
+            }
+
+            var totalCount = orders.Count;
+
+            // Sắp xếp
+            if (!string.IsNullOrEmpty(queryOrders.SortBy))
+            {
+                orders = queryOrders.SortBy.ToLower() switch
+                {
+                    "date" => queryOrders.isDecsending
+                        ? orders.OrderByDescending(p => p.CreatedAt).ToList()
+                        : orders.OrderBy(p => p.CreatedAt).ToList(),
+
+                    "name" => queryOrders.isDecsending
+                        ? orders.OrderByDescending(p => p.Name).ToList()
+                        : orders.OrderBy(p => p.Name).ToList(),
+
+                    _ => orders // nếu không khớp sortBy thì không sắp xếp
+                };
             }
 
             if (queryOrders.PageNumber > 0 && queryOrders.PageSize > 0)
             {
-                query = query
+                orders = orders
                     .Skip((queryOrders.PageNumber - 1) * queryOrders.PageSize)
-                    .Take(queryOrders.PageSize);
+                    .Take(queryOrders.PageSize)
+                    .ToList();
             }
-
-            var orders = await query.ToListAsync();
-
-            
 
             var resultOrders = orders.Select(order => new OrderResultDto
             {

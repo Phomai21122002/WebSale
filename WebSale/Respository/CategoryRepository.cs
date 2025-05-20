@@ -49,7 +49,9 @@ namespace WebSale.Respository
 
         public async Task<ICollection<CategoryResultDto>> GetCategories()
         {
-            return await _dataContext.Categories.Select(c => new CategoryResultDto {
+            return await _dataContext.Categories
+                .Where(c => !c.IsDeleted)
+                .Select(c => new CategoryResultDto {
                 Id = c.Id,
                 Name = c.Name,
                 Description = c.Description,
@@ -60,7 +62,7 @@ namespace WebSale.Respository
 
         public async Task<Category?> GetCategory(int id)
         {
-            return await _dataContext.Categories.Include(c => c.ImageCategories).FirstOrDefaultAsync(c => c.Id == id);
+            return await _dataContext.Categories.Include(c => c.ImageCategories).FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
         }
 
         public async Task<bool> Save()

@@ -195,25 +195,19 @@ namespace WebSale.Controllers
             return Ok(loginSuccess);
         }
 
-        [HttpGet("LoginByGoogle")]
-        public IResult LoginByGoogle(
-            [FromQuery] string returnUrl,
-            [FromServices] LinkGenerator linkGenerator,
-            [FromServices] SignInManager<User> signManager,
-            [FromServices] IHttpContextAccessor httpContextAccessor)
+        [HttpGet("google-login")]
+        public IActionResult LoginWithGoogle()
         {
-            var redirectUrl = linkGenerator.GetPathByName(
-                httpContextAccessor.HttpContext!,
-                "GoogleResponse",
-                values: new { returnUrl });
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = Url.Action("GoogleResponse")
+            };
 
-            var properties = signManager.ConfigureExternalAuthenticationProperties("Google", redirectUrl!);
-            Console.WriteLine("google");
-            return Results.Challenge(properties, authenticationSchemes: new[] { "Google" });
+            return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
 
-        [HttpGet("GoogleResponse", Name = "GoogleResponse")]
+        [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse([FromQuery] string returnUrl)
         {
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);

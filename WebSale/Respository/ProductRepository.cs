@@ -49,71 +49,71 @@ namespace WebSale.Respository
 
         public async Task<PageResult<ProductResultDto>> GetProducts(QueryFindSoftPaginationDto queryProducts)
         {
-            var query = _dataContext.Products
+            var baseQuery = _dataContext.Products
+                .Where(p => !p.IsDeleted)
                 .Include(p => p.ImageProducts)
                 .Include(p => p.Category)
                     .ThenInclude(c => c.ImageCategories)
-                .Include(p => p.ProductDetail)
-                .AsQueryable();
+                .Include(p => p.ProductDetail);
 
-            var totalCount = await query.CountAsync();
+            var resProducts = await baseQuery.ToListAsync();
 
-            // Sắp xếp
-            if (!string.IsNullOrEmpty(queryProducts.SortBy))
-            {
-                query = queryProducts.SortBy.ToLower() switch
-                {
-                    "price" => queryProducts.isDecsending
-                        ? query.OrderByDescending(p => p.Price)
-                        : query.OrderBy(p => p.Price),
-
-                    "name" => queryProducts.isDecsending
-                        ? query.OrderByDescending(p => p.Name)
-                        : query.OrderBy(p => p.Name),
-
-                    _ => query // nếu không khớp sortBy thì không sắp xếp
-                };
-            }
-
-            // Phân trang trước khi lọc
-            if (queryProducts.PageNumber > 0 && queryProducts.PageSize > 0) {
-                query = query
-                    .Skip((queryProducts.PageNumber - 1) * queryProducts.PageSize)
-                    .Take(queryProducts.PageSize);
-            }
-
-            // Lấy dữ liệu từ DB
-            var resProducts = await query.ToListAsync();
-
-            // Lọc theo tên trước
             if (!string.IsNullOrEmpty(queryProducts.Name))
             {
                 var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryProducts.Name.ToLower());
-                resProducts = resProducts.Where(p =>
-                    !string.IsNullOrEmpty(p.Name) && RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)
-                ).ToList();
+                resProducts = resProducts
+                    .Where(p =>
+                        !string.IsNullOrEmpty(p.Name) &&
+                        RemoveDiacritics.RemoveDiacriticsChar(p.Name.ToLower()).Contains(keyword)
+                    )
+                    .ToList();
             }
 
-            // Ánh xạ sang DTO
-            var resultProduct = resProducts.Select(resProduct => new ProductResultDto
+            var totalCount = resProducts.Count;
+
+            if (!string.IsNullOrEmpty(queryProducts.SortBy))
             {
-                Id = resProduct.Id,
-                Name = resProduct.Name,
-                Price = resProduct.Price,
-                Urls = resProduct.ImageProducts?.Select(ip => ip.Url).ToList(),
-                Description = resProduct.ProductDetail?.Description,
-                DescriptionDetail = resProduct.ProductDetail?.GetDescriptionFromFile(),
-                Quantity = resProduct.ProductDetail?.Quantity ?? 0,
-                Tag = resProduct.ProductDetail?.Tag,
-                Sold = resProduct.ProductDetail?.Sold ?? 0,
-                Slug = resProduct.Slug,
-                ExpiryDate = resProduct.ProductDetail?.ExpiryDate,
-                category = resProduct.Category == null ? null : new CategoryDto
+                resProducts = queryProducts.SortBy.ToLower() switch
                 {
-                    Id = resProduct.Category.Id,
-                    Name = resProduct.Category.Name,
-                    Description = resProduct.Category.Description,
-                    Urls = resProduct.Category.ImageCategories?.Select(ic => ic.Url).ToList()
+                    "price" => queryProducts.isDecsending
+                        ? resProducts.OrderByDescending(p => p.Price).ToList()
+                        : resProducts.OrderBy(p => p.Price).ToList(),
+
+                    "name" => queryProducts.isDecsending
+                        ? resProducts.OrderByDescending(p => p.Name).ToList()
+                        : resProducts.OrderBy(p => p.Name).ToList(),
+
+                    _ => resProducts
+                };
+            }
+
+            if (queryProducts.PageNumber > 0 && queryProducts.PageSize > 0)
+            {
+                resProducts = resProducts
+                    .Skip((queryProducts.PageNumber - 1) * queryProducts.PageSize)
+                    .Take(queryProducts.PageSize)
+                    .ToList();
+            }
+
+            var resultProduct = resProducts.Select(p => new ProductResultDto
+            {
+                Id = p.Id,
+                Name = p.Name,
+                Price = p.Price,
+                Urls = p.ImageProducts?.Select(ip => ip.Url).ToList(),
+                Description = p.ProductDetail?.Description,
+                DescriptionDetail = p.ProductDetail?.GetDescriptionFromFile(),
+                Quantity = p.ProductDetail?.Quantity ?? 0,
+                Tag = p.ProductDetail?.Tag,
+                Sold = p.ProductDetail?.Sold ?? 0,
+                Slug = p.Slug,
+                ExpiryDate = p.ProductDetail?.ExpiryDate,
+                category = p.Category == null ? null : new CategoryDto
+                {
+                    Id = p.Category.Id,
+                    Name = p.Category.Name,
+                    Description = p.Category.Description,
+                    Urls = p.Category.ImageCategories?.Select(ic => ic.Url).ToList()
                 }
             }).ToList();
 
@@ -126,9 +126,11 @@ namespace WebSale.Respository
             };
         }
 
+
         public async Task<PageResult<ProductResultDto>> GetProductsByIdCategory(int categoryId, QuerySoftPaginationDto queryProducts)
         {
             var query = _dataContext.Products
+                .Where(p => !p.IsDeleted)
                 .Include(p => p.ImageProducts)
                 .Include(p => p.Category)
                     .ThenInclude(c => c.ImageCategories)
@@ -210,7 +212,7 @@ namespace WebSale.Respository
                 .Include(p => p.Category)
                     .ThenInclude(c => c.ImageCategories)
                 .Include(p => p.ProductDetail)
-                .FirstOrDefaultAsync(p => p.Id == id);
+                .FirstOrDefaultAsync(p => p.Id == id && !p.IsDeleted);
             var resultProduct = new ProductResultDto
             {
                 Id = resProduct?.Id ?? 0,
@@ -238,7 +240,7 @@ namespace WebSale.Respository
 
         public async Task<int?> GetIdProductBySlug(string slug)
         {
-            return await _dataContext.Products.Where(p => p.Slug == slug).Select(p => p.Id).FirstOrDefaultAsync();
+            return await _dataContext.Products.Where(p => p.Slug == slug && !p.IsDeleted).Select(p => p.Id).FirstOrDefaultAsync();
         }
     }
 }

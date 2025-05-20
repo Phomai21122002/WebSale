@@ -259,28 +259,38 @@ namespace WebSale.Controllers
             }
         }
 
-        //[HttpDelete("soft-delete")]
-        //public async Task<IActionResult> DelelteSoftProduct([FromQuery] int productId)
-        //{
-        //    var status = new Status();
-        //    try
-        //    {
-        //        if (!await _productRepository.ProductExists(productId))
-        //        {
-        //            status.StatusCode = 402;
-        //            status.Message = "Product does not exists";
-        //            return BadRequest(status);
-        //        }
-        //        var product = await _productRepository.GetProduct(productId);
+        [HttpDelete("soft-delete")]
+        public async Task<IActionResult> DelelteSoftProduct([FromQuery] int productId)
+        {
+            var status = new Status();
+            try
+            {
+                if (!await _productRepository.ProductExists(productId))
+                {
+                    status.StatusCode = 402;
+                    status.Message = "Product does not exists";
+                    return BadRequest(status);
+                }
+                var product = await _productRepository.GetProduct(productId);
 
-        //        return Ok(await _productRepository.GetProduct(productId));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        status.StatusCode = 500;
-        //        status.Message = $"Internal Server Error: {ex.Message}";
-        //        return BadRequest(status);
-        //    }
-        //}
+                product.IsDeleted = true;
+                product.DeletedAt = DateTime.Now;
+
+                if (!await _productRepository.UpdateProduct(product))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating product";
+                    return BadRequest(status);
+                }
+
+                return Ok(product);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
     }
 }

@@ -5,6 +5,7 @@ using System.Text.Json;
 using WebSale.Dto.Categories;
 using WebSale.Interfaces;
 using WebSale.Models;
+using WebSale.Respository;
 
 namespace WebSale.Controllers
 {
@@ -138,6 +139,42 @@ namespace WebSale.Controllers
                 }
 
                 return Ok(await _categoryRepository.GetCategory(idCategory));
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
+        [HttpDelete("soft-delete")]
+        public async Task<IActionResult> DelelteSoftCategory([FromQuery] int categoryId)
+        {
+            var status = new Status();
+            try
+            {
+                if (!await _categoryRepository.CategoryExists(categoryId))
+                {
+                    status.StatusCode = 402;
+                    status.Message = "Category does not exists";
+                    return BadRequest(status);
+                }
+                var category = await _categoryRepository.GetCategory(categoryId);
+
+                category.IsDeleted = true;
+                category.DeletedAt = DateTime.Now;
+
+                var categoryUpdated = await _categoryRepository.UpdateCategory(category);
+
+                if (categoryUpdated == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating category";
+                    return BadRequest(status);
+                }
+
+                return Ok(categoryUpdated);
             }
             catch (Exception ex)
             {

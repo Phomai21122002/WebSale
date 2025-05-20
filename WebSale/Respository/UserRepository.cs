@@ -37,38 +37,7 @@ namespace WebSale.Respository
 
         public async Task<PageResult<User>> GetUsers(QueryFindSoftPaginationDto queryUsers)
         {
-            var query = _context.Users.Include(u => u.Role).AsQueryable();
-
-            var totalCount = await query.CountAsync();
-
-            // Sắp xếp
-            if (!string.IsNullOrEmpty(queryUsers.SortBy))
-            {
-                query = queryUsers.SortBy.ToLower() switch
-                {
-                    "email" => queryUsers.isDecsending
-                        ? query.OrderByDescending(p => p.Email)
-                        : query.OrderBy(p => p.Email),
-                    "name" => queryUsers.isDecsending
-                        ? query.OrderByDescending(p => p.FirstName)
-                    : query.OrderBy(p => p.FirstName),
-                    "phone" => queryUsers.isDecsending
-                        ? query.OrderByDescending(p => p.Phone)
-                    : query.OrderBy(p => p.Phone),
-
-                    _ => query
-                };
-            }
-
-            // Phân trang trước khi lọc
-            if (queryUsers.PageNumber > 0 && queryUsers.PageSize > 0)
-            {
-                query = query
-                    .Skip((queryUsers.PageNumber - 1) * queryUsers.PageSize)
-                    .Take(queryUsers.PageSize);
-            }
-
-            // Lấy dữ liệu từ DB
+            var query = _context.Users.Include(u => u.Role);
             var resUsers = await query.ToListAsync();
 
             if (!string.IsNullOrEmpty(queryUsers.Name))
@@ -83,7 +52,34 @@ namespace WebSale.Respository
                      RemoveDiacritics.RemoveDiacriticsChar(p.LastName.ToLower()).Contains(keyword))
                 ).ToList();
             }
+            var totalCount = resUsers.Count;
 
+            // Sắp xếp
+            if (!string.IsNullOrEmpty(queryUsers.SortBy))
+            {
+                resUsers = queryUsers.SortBy.ToLower() switch
+                {
+                    "email" => queryUsers.isDecsending
+                        ? resUsers.OrderByDescending(p => p.Email).ToList()
+                        : resUsers.OrderBy(p => p.Email).ToList(),
+                    "name" => queryUsers.isDecsending
+                        ? resUsers.OrderByDescending(p => p.FirstName).ToList()
+                    : resUsers.OrderBy(p => p.FirstName).ToList(),
+                    "phone" => queryUsers.isDecsending
+                        ? resUsers.OrderByDescending(p => p.Phone).ToList()
+                    : resUsers.OrderBy(p => p.Phone).ToList(),
+
+                    _ => resUsers
+                };
+            }
+
+            // Phân trang trước khi lọc
+            if (queryUsers.PageNumber > 0 && queryUsers.PageSize > 0)
+            {
+                resUsers = resUsers
+                    .Skip((queryUsers.PageNumber - 1) * queryUsers.PageSize)
+                    .Take(queryUsers.PageSize).ToList();
+            }
 
             return new PageResult<User>
             {

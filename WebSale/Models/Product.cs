@@ -22,6 +22,7 @@ namespace WebSale.Models
         [MaxLength(255)]
         public string? Slug { get; set; }
         public int ProductDetailId { get; set; }
+        public bool IsDeleted { get; set; } = false;
 
         public ICollection<Cart>? Carts { get; set; }
         public ICollection<OrderProduct>? OrderProducts { get; set; }
