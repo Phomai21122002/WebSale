@@ -196,11 +196,13 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("google-login")]
-        public IActionResult LoginWithGoogle()
+        public IActionResult LoginWithGoogle([FromQuery] string returnUrl = "/")
         {
+            var redirectUrl = Url.Action("GoogleResponse", new { returnUrl });
+
             var properties = new AuthenticationProperties
             {
-                RedirectUri = Url.Action("GoogleResponse")
+                RedirectUri = redirectUrl
             };
 
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
@@ -208,12 +210,15 @@ namespace WebSale.Controllers
 
 
         [HttpGet("google-response")]
-        public async Task<IActionResult> GoogleResponse([FromQuery] string returnUrl)
+        public async Task<IActionResult> GoogleResponse([FromQuery] string returnUrl = "/")
         {
+            Console.WriteLine($"User logged in via Google:)");
+
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
             if (!result.Succeeded || result.Principal == null)
-                return Unauthorized();
+                return Unauthorized("Xác thực Google không thành công.");
+            Console.WriteLine($"User logged in via Google");
 
             var claims = result.Principal.Identities.FirstOrDefault()?.Claims;
 
