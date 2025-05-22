@@ -2,6 +2,7 @@
 using FPS_ReviewAPI.Dto;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.Authentication.Facebook;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -298,6 +299,97 @@ namespace WebSale.Controllers
             return Content(html, "text/html");
 
         }
+
+        [HttpGet("facebook-login")]
+        public IActionResult LoginWithFacebook([FromQuery] string returnUrl = "/")
+        {
+            var redirectUrl = Url.Action("FacebookResponse", new { returnUrl });
+
+            var properties = new AuthenticationProperties
+            {
+                RedirectUri = redirectUrl
+            };
+            properties.Items["prompt"] = "select_account";
+
+            return Challenge(properties, FacebookDefaults.AuthenticationScheme);
+        }
+
+        [HttpGet("facebook-response")]
+        public async Task<IActionResult> FacebookResponse([FromQuery] string returnUrl = "/")
+        {
+            var result = await HttpContext.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
+
+            if (!result.Succeeded || result.Principal == null)
+                return Unauthorized("Xác thực Facebook không thành công.");
+
+            var claims = result.Principal.Identities.FirstOrDefault()?.Claims.Select(claim => new
+            {
+                claim.Issuer,
+                claim.OriginalIssuer,
+                claim.Type,
+                claim.Value
+            });
+
+            var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
+            var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var firstName = claims?.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
+            var lastName = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
+
+            var user = await _loginRepository.CheckUserByEmail(email);
+            if (user == null)
+            {
+                var password = HashPassword.HashPass("123456789");
+                var role = await _roleRepository.GetRole(2);
+
+                var newUser = new User
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    Password = password,
+                    ConfirmEmail = true,
+                    CreatedAt = DateTime.Now,
+                    TwoFactorEnabled = true,
+                    Code = new Random().Next(100000, 999999),
+                };
+
+                user = await _userRepository.CreateUser(newUser);
+                user.Role = role;
+                if (user == null)
+                    return Content("<script>window.close();</script>", "text/html");
+            }
+
+            var claimsToken = new List<Claim>
+    {
+        new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
+        new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+        new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
+        new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty),
+        new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+    };
+
+            var tokens = _tokenService.GetToken(claimsToken);
+            var refreshToken = _tokenService.GetRefreshToken();
+
+            var html = $@"
+        <html>
+        <body>
+        <script>
+            window.opener.postMessage({{
+                token: '{tokens.Token}',
+                refreshToken: '{refreshToken}',
+                email: '{user.Email}',
+                firstName: '{user.FirstName}',
+                lastName: '{user.LastName}'
+            }}, '*');
+            window.close();
+        </script>
+        </body>
+        </html>";
+
+            return Content(html, "text/html");
+        }
+
     }
-    
+
 }

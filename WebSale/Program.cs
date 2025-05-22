@@ -118,6 +118,22 @@ builder.Services.AddAuthentication(options =>
         options.ClientSecret = clientSecret;
         options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
     })
+    .AddFacebook(options =>
+    {
+        var appId = builder.Configuration["FacebookKeys:AppId"];
+        if (appId == null)
+        {
+            throw new ArgumentNullException(nameof(appId));
+        }
+        var appSecret = builder.Configuration["FacebookKeys:AppSecret"];
+        if (appSecret == null)
+        {
+            throw new ArgumentNullException(nameof(appSecret));
+        }
+        options.AppId = appId;
+        options.AppSecret = appSecret;
+        options.SignInScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+    })
 .AddJwtBearer(options =>
 {
     options.SaveToken = true;
