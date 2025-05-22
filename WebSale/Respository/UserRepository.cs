@@ -18,10 +18,11 @@ namespace WebSale.Respository
         {
             _context = context;
         }
-        public async Task<bool> CreateUser(User user)
+        public async Task<User> CreateUser(User user)
         {
             await  _context.AddAsync(user);
-            return await Save();
+            await _context.SaveChangesAsync();
+            return user;
         }
 
         public async Task<bool> DeleteUser(User user)

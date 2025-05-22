@@ -11,7 +11,7 @@ namespace WebSale.Interfaces
         Task<User?> GetUser(string userId);
         Task<UserResultDto?> GetResultUser(string userId);
         Task<bool> UserExists(string userId);
-        Task<bool> CreateUser(User user);
+        Task<User> CreateUser(User user);
         Task<bool> UpdateUser(User user);
         Task<bool> DeleteUser(User user);
         Task<User> CheckCode(string email, int code);

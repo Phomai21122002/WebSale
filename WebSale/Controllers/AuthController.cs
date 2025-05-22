@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -127,7 +128,8 @@ namespace WebSale.Controllers
             userMap.Role = await _roleRepository.GetRole(idRole);
             userMap.CreatedAt = DateTime.Now;
 
-            if (!await _userRepository.CreateUser(userMap))
+            var newUser = await _userRepository.CreateUser(userMap);
+            if (newUser == null)
             {
                 status.StatusCode = 500;
                 status.Message = "saving fail";
@@ -140,6 +142,14 @@ namespace WebSale.Controllers
             status.StatusCode = 200;
             status.Message = "User created successfully";
             return Ok(status);
+        }
+
+        [HttpPost("Logout")]
+
+        public async Task<IActionResult> Logout()
+        {
+            await HttpContext.SignOutAsync();
+            return Ok(true);
         }
 
         [HttpPost("confirmEmail")]
@@ -205,6 +215,8 @@ namespace WebSale.Controllers
                 RedirectUri = redirectUrl
             };
 
+            properties.Items["prompt"] = "select_account";
+
             return Challenge(properties, GoogleDefaults.AuthenticationScheme);
         }
 
@@ -212,26 +224,79 @@ namespace WebSale.Controllers
         [HttpGet("google-response")]
         public async Task<IActionResult> GoogleResponse([FromQuery] string returnUrl = "/")
         {
-            Console.WriteLine($"User logged in via Google:)");
-
+            var status = new Status();
             var result = await HttpContext.AuthenticateAsync(GoogleDefaults.AuthenticationScheme);
 
             if (!result.Succeeded || result.Principal == null)
                 return Unauthorized("Xác thực Google không thành công.");
-            Console.WriteLine($"User logged in via Google");
 
-            var claims = result.Principal.Identities.FirstOrDefault()?.Claims;
+            var claims = result.Principal.Identities.FirstOrDefault()?.Claims.Select(claim => new
+            {
+                claim.Issuer,
+                claim.OriginalIssuer,
+                claim.Type,
+                claim.Value
+            });
 
             var email = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Email)?.Value;
             var name = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Name)?.Value;
+            var firstName = claims?.FirstOrDefault(c => c.Type == ClaimTypes.GivenName)?.Value;
+            var lastName = claims?.FirstOrDefault(c => c.Type == ClaimTypes.Surname)?.Value;
 
-            // 👉 Nếu muốn tạo user tại đây, có thể làm:
-            // var user = await _userManager.FindByEmailAsync(email);
-            // if (user == null) { tạo mới user tại đây... }
+            var user = await _loginRepository.CheckUserByEmail(email);
+            if (user == null)
+            {
+                var password = HashPassword.HashPass("123456789");
+                var role = await _roleRepository.GetRole(2);
 
-            Console.WriteLine($"User logged in via Google: {name} ({email})");
+                var newUser = new User
+                {
+                    FirstName = firstName,
+                    LastName = lastName,
+                    Email = email,
+                    Password = password,
+                    ConfirmEmail = true,
+                    CreatedAt = DateTime.Now,
+                    TwoFactorEnabled = true,
+                    Code = new Random().Next(100000, 999999),
+                };
 
-            return Redirect(returnUrl);
+                user = await _userRepository.CreateUser(newUser);
+                user.Role = role;
+                if (user == null)
+                    return Content("<script>window.close();</script>", "text/html");
+
+            }
+            var claimsToken = new List<Claim>
+            {
+                new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
+                new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+            };
+
+            var tokens = _tokenService.GetToken(claimsToken);
+            var refreshToken = _tokenService.GetRefreshToken();
+
+            var html = $@"
+                <html>
+                <body>
+                <script>
+                    window.opener.postMessage({{
+                        token: '{tokens.Token}',
+                        refreshToken: '{refreshToken}',
+                        email: '{user.Email}',
+                        firstName: '{user.FirstName}',
+                        lastName: '{user.LastName}'
+                    }}, '*');
+                    window.close();
+                </script>
+                </body>
+                </html>";
+
+            return Content(html, "text/html");
+
         }
     }
     
