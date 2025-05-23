@@ -12,6 +12,7 @@ namespace WebSale.Dto.Categories
         public string? Name { get; set; }
         public string? Description { get; set; }
         public int? CountProduct { get; set; }
+        public bool? IsDelete { get; set; }
         public ICollection<ImageCategory>? ImageCategories { get; set; }
     }
 }

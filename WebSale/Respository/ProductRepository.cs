@@ -108,6 +108,7 @@ namespace WebSale.Respository
                 Sold = p.ProductDetail?.Sold ?? 0,
                 Slug = p.Slug,
                 ExpiryDate = p.ProductDetail?.ExpiryDate,
+                IsDeleted = p.IsDeleted,
                 category = p.Category == null ? null : new CategoryDto
                 {
                     Id = p.Category.Id,
@@ -166,6 +167,7 @@ namespace WebSale.Respository
                 Sold = resProduct.ProductDetail?.Sold ?? 0,
                 Slug = resProduct.Slug,
                 ExpiryDate = resProduct.ProductDetail?.ExpiryDate,
+                IsDeleted = resProduct.IsDeleted,
                 category = resProduct.Category == null ? null : new CategoryDto
                 {
                     Id = resProduct.Category.Id,

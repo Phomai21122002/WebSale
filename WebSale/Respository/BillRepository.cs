@@ -17,6 +17,7 @@ using WebSale.Dto.QueryDto;
 using WebSale.Dto.Bills;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
 using System.Reflection.Metadata;
+using Microsoft.AspNetCore.Http.HttpResults;
 
 namespace WebSale.Respository
 {
@@ -45,6 +46,8 @@ namespace WebSale.Respository
         {
             var bill = await _dataContext.Bills
                 .Include(b => b.User)
+                    .ThenInclude(ua => ua.UserAddresses)
+                        .ThenInclude(a => a.Address)
                 .Include(b => b.BillDetails)
                 .Where(b => b.Id == billId && b.User != null && b.User.Id == userId)
                 .FirstOrDefaultAsync();
@@ -57,6 +60,7 @@ namespace WebSale.Respository
                 Total = bill.BillDetails.Sum(bd => bd.Quantity),
                 TotalPrice = bill.BillDetails.Sum(bd => bd.Quantity * bd.Price),
                 IsCompleted = true,
+                CreatedAt = bill.CreatedAt,
                 BillDetails = bill.BillDetails.Select(bd => new BillDetailResultDto
                 {
                     Id = bd.Id,
@@ -66,8 +70,25 @@ namespace WebSale.Respository
                     Description = bd.Description,
                     DescriptionDetail = bd.DescriptionDetail,
                     Quantity = bd.Quantity,
-                }).ToList()
-                
+                }).ToList(),
+                User = new UserResultDto
+                {
+                    Id = bill.User?.Id,
+                    Email = bill.User?.Email,
+                    FirstName = bill.User?.FirstName,
+                    LastName = bill.User?.LastName,
+                    Phone = bill.User?.Phone,
+                    url = bill.User?.url,
+                    Addresses = bill.User?.UserAddresses!
+                        .Select(ud => new AddressDto
+                        {
+                            Id = ud.Address!.Id,
+                            Name = ud.Address!.Name!,
+                            Code = ud.Address.Code,
+                            IsDefault = ud.IsDefault
+                        })
+                        .ToList(),
+                }
             };
             return resultBill;
         }

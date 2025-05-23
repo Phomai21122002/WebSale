@@ -52,12 +52,13 @@ namespace WebSale.Respository
             return await _dataContext.Categories
                 .Where(c => !c.IsDeleted)
                 .Select(c => new CategoryResultDto {
-                Id = c.Id,
-                Name = c.Name,
-                Description = c.Description,
-                CountProduct = c.Products!.Count(),
-                ImageCategories = c.ImageCategories,
-            }).ToListAsync();
+                    Id = c.Id,
+                    Name = c.Name,
+                    Description = c.Description,
+                    CountProduct = c.Products!.Count(),
+                    ImageCategories = c.ImageCategories,
+                    IsDelete = c.IsDeleted
+                }).ToListAsync();
         }
 
         public async Task<Category?> GetCategory(int id)
