@@ -12,6 +12,8 @@ namespace WebSale.Interfaces
         Task<ICollection<Order>> GetOrders(string userId);
         Task<Order> GetOrderByUserId(string userId, int orderId);
         Task<Order> GetOrderById(int orderId);
+        Task<int?> TotalOrder();
+        Task<OrderResultStatisticDto> GetOrderStatistic();
         Task<OrderResultDetailDto> GetOrderResultByUserId(string userId, int orderId);
         Task<PageResult<OrderResultDto>> GetOrdersResultByUserId(string userId, int status, QueryFindPaginationDto queryOrders);
         Task<PageResult<OrderResultDto>> GetOrdersResultByAdmin(int status, QueryFindSoftPaginationDto queryOrders);

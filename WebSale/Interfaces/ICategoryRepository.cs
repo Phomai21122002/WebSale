@@ -7,6 +7,7 @@ namespace WebSale.Interfaces
     {
         Task<ICollection<CategoryResultDto>> GetCategories();
         Task<Category?> GetCategory(int id);
+        Task<int?> TotalCategory();
         Task<Category> CreateCategory(Category category);
         Task<Category> UpdateCategory(Category category);
         Task<bool> DeleteCategory(int id);

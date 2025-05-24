@@ -78,6 +78,7 @@ namespace WebSale.Respository
                 .Include(op => op.Product)
                     .ThenInclude(p => p.Category)
                         .ThenInclude(c => c.ImageCategories)
+                .OrderByDescending(o => o.CreatedAt)
                 .AsQueryable();
 
             var totalCount = await query.CountAsync();

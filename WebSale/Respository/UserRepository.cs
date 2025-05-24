@@ -140,5 +140,11 @@ namespace WebSale.Respository
                 return null;
             return user;
         }
+
+        public async Task<int?> TotalUser()
+        {
+            var users = await _context.Users.ToListAsync();
+            return users.Count;
+        }
     }
 }

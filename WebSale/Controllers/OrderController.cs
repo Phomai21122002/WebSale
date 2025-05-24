@@ -132,6 +132,31 @@ namespace WebSale.Controllers
             }
         }
 
+        [HttpGet("statistic")]
+        public async Task<IActionResult> GetStatisticOrders()
+        {
+            var status = new Status();
+            try
+            {
+                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+                var orderStatistic = await _orderRepository.GetOrderStatistic();
+                if (orderStatistic == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while getting statistic orders of user";
+                    return BadRequest(status);
+                }
+                return Ok(orderStatistic);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
         [HttpGet("ProductInOrders")]
         public async Task<IActionResult> GetOrderProductsCancel([FromQuery] string inputUserId, [FromQuery] int inputStatus, [FromQuery] QueryPaginationDto queryPaginationDto)
         {

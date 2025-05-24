@@ -108,7 +108,7 @@ namespace WebSale.Controllers
                 if (!await _cartRepository.DeleteCarts(cartsRemoved))
                 {
                     status.StatusCode = 500;
-                    status.Message = "Something went wrong while creating order of user";
+                    status.Message = "Something went wrong while deleting carts of user";
                     return BadRequest(status);
                 }
 
@@ -138,7 +138,9 @@ namespace WebSale.Controllers
                     Success = true,
                     Message = "Payment successful",
                     OrderId = order.Id,
-                    TransactionId = response.TransactionId
+                    TransactionId = response.TransactionId,
+                    OrderDescription = vnpayModel.OrderDescription,
+                    Amount = order.Total
                 });
             }
 

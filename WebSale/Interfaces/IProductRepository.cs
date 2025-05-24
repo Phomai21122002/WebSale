@@ -10,6 +10,7 @@ namespace WebSale.Interfaces
         Task<PageResult<ProductResultDto>> GetProducts(QueryFindSoftPaginationDto queryProducts);
         Task<PageResult<ProductResultDto>> GetProductsByIdCategory(int categoryId, QuerySoftPaginationDto queryProducts);
         Task<Product?> GetProduct(int id);
+        Task<int?> TotalProduct();
         Task<int?> GetIdProductBySlug(string slug);
         Task<ProductResultDto?> GetProductResult(int id);
         Task<Product> CreateProduct(Product product);

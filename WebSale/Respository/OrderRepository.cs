@@ -14,6 +14,7 @@ using MailKit.Search;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using WebSale.Extensions;
 using WebSale.Dto.QueryDto;
+using FPS_ReviewAPI.Dto;
 
 namespace WebSale.Respository
 {
@@ -161,7 +162,8 @@ namespace WebSale.Respository
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.Category)
-                            .ThenInclude(c => c.ImageCategories);
+                            .ThenInclude(c => c.ImageCategories)
+                .OrderByDescending(o => o.CreatedAt);
 
             var orders = await query.ToListAsync();
 
@@ -348,6 +350,40 @@ namespace WebSale.Respository
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)
                 .FirstOrDefaultAsync();
+        }
+
+        public async Task<OrderResultStatisticDto> GetOrderStatistic()
+        {
+            var orders = await _dataContext.Orders
+                .Include(o => o.User)
+                    .ThenInclude(ua => ua.UserAddresses)
+                        .ThenInclude(a => a.Address)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ImageProducts)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.Category)
+                            .ThenInclude(c => c.ImageCategories)
+                .ToListAsync();
+            var resultOrderStatistic = new OrderResultStatisticDto
+            {
+                AmountPending = orders.Where(o => o.Status == (int)OrderStatus.Pending).ToList().Count,
+                AmountShipped = orders.Where(o => o.Status == (int)OrderStatus.Processing).ToList().Count,
+                AmountRecieved = orders.Where(o => o.Status == (int)OrderStatus.Completed).ToList().Count,
+                AmountCancelled = orders.Where(o => o.Status == (int)OrderStatus.Cancelled).ToList().Count,
+            };
+
+            return resultOrderStatistic;
+        }
+
+        public async Task<int?> TotalOrder()
+        {
+            var orders = await _dataContext.Orders.ToListAsync();
+            return orders.Count;
         }
     }
 }

@@ -244,5 +244,11 @@ namespace WebSale.Respository
         {
             return await _dataContext.Products.Where(p => p.Slug == slug && !p.IsDeleted).Select(p => p.Id).FirstOrDefaultAsync();
         }
+
+        public async Task<int?> TotalProduct()
+        {
+            var products = await _dataContext.Products.Where(p => !p.IsDeleted).ToListAsync();
+            return products.Count;
+        }
     }
 }
