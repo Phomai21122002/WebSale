@@ -250,5 +250,43 @@ namespace WebSale.Respository
             var products = await _dataContext.Products.Where(p => !p.IsDeleted).ToListAsync();
             return products.Count;
         }
+
+        public async Task<ICollection<ProductResultDto>?> GetTopProductResult()
+        {
+            var products = await _dataContext.Products
+                .Where(p => !p.IsDeleted)
+                .Include(p => p.ImageProducts)
+                .Include(p => p.Category)
+                    .ThenInclude(c => c.ImageCategories)
+                .Include(p => p.ProductDetail)
+                .OrderByDescending(p => p.ProductDetail.Sold)
+                .Take(10)
+                .ToListAsync();
+
+            var resultProducts = products.Select(resProduct => new ProductResultDto
+            {
+                Id = resProduct.Id,
+                Name = resProduct.Name,
+                Price = resProduct.Price,
+                Urls = resProduct.ImageProducts?.Select(ip => ip.Url).ToList(),
+                Description = resProduct.ProductDetail?.Description,
+                DescriptionDetail = resProduct.ProductDetail?.GetDescriptionFromFile(),
+                Quantity = resProduct.ProductDetail?.Quantity ?? 0,
+                Tag = resProduct.ProductDetail?.Tag,
+                Sold = resProduct.ProductDetail?.Sold ?? 0,
+                Slug = resProduct.Slug,
+                ExpiryDate = resProduct.ProductDetail?.ExpiryDate,
+                IsDeleted = resProduct.IsDeleted,
+                category = resProduct.Category == null ? null : new CategoryDto
+                {
+                    Id = resProduct.Category.Id,
+                    Name = resProduct.Category.Name,
+                    Description = resProduct.Category.Description,
+                    Urls = resProduct.Category.ImageCategories?.Select(ic => ic.Url).ToList()
+                }
+            }).ToList();
+
+            return resultProducts;
+        }
     }
 }
