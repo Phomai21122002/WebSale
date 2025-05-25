@@ -143,8 +143,8 @@ namespace WebSale.Respository
 
         public async Task<int?> TotalUser()
         {
-            var users = await _context.Users.ToListAsync();
-            return users.Count;
+            int count = await _context.Users.CountAsync();
+            return count;
         }
     }
 }

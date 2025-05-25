@@ -36,6 +36,7 @@ namespace WebSale.Controllers
             }
 
             var roleMap = _mapper.Map<Role>(roleDto);
+            roleMap.CreatedAt = DateTime.Now;
 
             if (!await _roleRepository.CreateRole(roleMap)) {
                 status.StatusCode = 500;

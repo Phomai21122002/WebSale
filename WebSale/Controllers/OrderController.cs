@@ -138,8 +138,6 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
                 var orderStatistic = await _orderRepository.GetOrderStatistic();
                 if (orderStatistic == null)
                 {

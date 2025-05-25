@@ -71,7 +71,7 @@ namespace WebSale.Controllers
             return Ok(products);
         }
 
-        [HttpGet("productstop")]
+        [HttpGet("productsTop")]
         public async Task<IActionResult> GetProductsTop()
         {
             var status = new Status();

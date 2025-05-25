@@ -175,7 +175,7 @@ namespace WebSale.Respository
         public async Task<double?> TotalSales()
         {
             var bills = await _dataContext.Bills.Include(b => b.BillDetails).ToListAsync();
-            double totalSales = bills.Sum(b => b.BillDetails.Sum(bd => bd.Price * bd.Quantity));
+            double totalSales = bills.Sum(b => b.BillDetails?.Sum(bd =>(bd.Price) * (bd.Quantity)) ?? 0);
             return totalSales;
         }
     }

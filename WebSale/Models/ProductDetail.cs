@@ -1,4 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Globalization;
+using System.Text;
 using System.Text.RegularExpressions;
 
 namespace WebSale.Models
@@ -26,16 +28,23 @@ namespace WebSale.Models
         {
             Directory.CreateDirectory(DescriptionFolder);
 
-            var sanitizedFileName = Regex.Replace(Description.ToLower().Trim(), @"[^a-z0-9\s-]", "")
-                .Replace(" ", "_")
-                .Replace("--", "_");
+            string rawName = string.IsNullOrWhiteSpace(Description) ? "productdetail" : Description.ToLower().Trim();
+
+            string sanitized = RemoveDiacritics(rawName);
+
+            sanitized = Regex.Replace(sanitized, @"[^a-z0-9\s-_]", ""); 
+            sanitized = Regex.Replace(sanitized, @"\s+", "_"); 
+
+            foreach (char c in Path.GetInvalidFileNameChars())
+            {
+                sanitized = sanitized.Replace(c.ToString(), "");
+            }
 
             var uniqueIdentifier = Guid.NewGuid();
-            string fileName = $"{sanitizedFileName}_{uniqueIdentifier}.txt";
+            string fileName = $"{sanitized}_{uniqueIdentifier}.txt";
 
             string filePath = Path.Combine(DescriptionFolder, fileName);
-
-            File.WriteAllText(filePath, DescriptionDetail);
+            File.WriteAllText(filePath, DescriptionDetail ?? "");
 
             DescriptionDetail = fileName;
         }
@@ -60,6 +69,13 @@ namespace WebSale.Models
                 return true;
             }
             return false;
+        }
+
+        private string RemoveDiacritics(string text)
+        {
+            return new string(text.Normalize(NormalizationForm.FormD)
+                .Where(c => CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark)
+                .ToArray());
         }
     }
 }

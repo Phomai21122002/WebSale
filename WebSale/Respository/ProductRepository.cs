@@ -52,7 +52,7 @@ namespace WebSale.Respository
             var baseQuery = _dataContext.Products
                 .Where(p => !p.IsDeleted)
                 .Include(p => p.ImageProducts)
-                .Include(p => p.Category)
+                .Include(p => p.Category)   
                     .ThenInclude(c => c.ImageCategories)
                 .Include(p => p.ProductDetail);
 
@@ -247,8 +247,8 @@ namespace WebSale.Respository
 
         public async Task<int?> TotalProduct()
         {
-            var products = await _dataContext.Products.Where(p => !p.IsDeleted).ToListAsync();
-            return products.Count;
+            int count = await _dataContext.Products.Where(p => !p.IsDeleted).CountAsync();
+            return count;
         }
 
         public async Task<ICollection<ProductResultDto>?> GetTopProductResult()

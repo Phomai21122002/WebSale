@@ -77,11 +77,10 @@ namespace WebSale.Respository
            await  _dataContext.SaveChangesAsync();
            return category;
         }
-
         public async Task<int?> TotalCategory()
         {
-            var categories = await _dataContext.Categories.Where(c => !c.IsDeleted).ToListAsync();
-            return categories.Count;
+            int count = await _dataContext.Categories.Where(c => !c.IsDeleted).CountAsync();
+            return count;
         }
     }
 }

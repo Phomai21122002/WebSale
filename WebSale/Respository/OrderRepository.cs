@@ -369,12 +369,23 @@ namespace WebSale.Respository
                         .ThenInclude(p => p.Category)
                             .ThenInclude(c => c.ImageCategories)
                 .ToListAsync();
+            if (orders == null || !orders.Any())
+            {
+                return new OrderResultStatisticDto
+                {
+                    AmountPending = 0,
+                    AmountShipped = 0,
+                    AmountRecieved = 0,
+                    AmountCancelled = 0,
+                };
+            }
+
             var resultOrderStatistic = new OrderResultStatisticDto
             {
-                AmountPending = orders.Where(o => o.Status == (int)OrderStatus.Pending).ToList().Count,
-                AmountShipped = orders.Where(o => o.Status == (int)OrderStatus.Processing).ToList().Count,
-                AmountRecieved = orders.Where(o => o.Status == (int)OrderStatus.Completed).ToList().Count,
-                AmountCancelled = orders.Where(o => o.Status == (int)OrderStatus.Cancelled).ToList().Count,
+                AmountPending = orders.Count(o => o.Status == (int)OrderStatus.Pending),
+                AmountShipped = orders.Count(o => o.Status == (int)OrderStatus.Processing),
+                AmountRecieved = orders.Count(o => o.Status == (int)OrderStatus.Completed),
+                AmountCancelled = orders.Count(o => o.Status == (int)OrderStatus.Cancelled),
             };
 
             return resultOrderStatistic;
@@ -382,8 +393,8 @@ namespace WebSale.Respository
 
         public async Task<int?> TotalOrder()
         {
-            var orders = await _dataContext.Orders.ToListAsync();
-            return orders.Count;
+            int count = await _dataContext.Orders.CountAsync();
+            return count;
         }
     }
 }

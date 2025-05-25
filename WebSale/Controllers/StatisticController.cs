@@ -38,7 +38,6 @@ namespace WebSale.Controllers
         [HttpGet]
         public async Task<IActionResult> GetStatistic()
         {
-            var status = new Status();
             try
             {
                 var totalProduct = await _productRepository.TotalProduct();
@@ -60,9 +59,12 @@ namespace WebSale.Controllers
             }
             catch (Exception ex)
             {
-                status.StatusCode = 500;
-                status.Message = $"Internal Server Error: {ex.Message}";
-                return BadRequest(status);
+                var status = new Status
+                {
+                    StatusCode = 500,
+                    Message = $"Internal Server Error: {ex.Message}"
+                };
+                return StatusCode(500, status);
             }
         }
     }
