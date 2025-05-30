@@ -11,6 +11,7 @@ using WebSale.Services.Momo;
 using WebSale.Services.Vnpay;
 using WebSale.Dto.QueryDto;
 using WebSale.Dto.Bills;
+using WebSale.Respository;
 
 namespace WebSale.Controllers
 {
@@ -21,11 +22,12 @@ namespace WebSale.Controllers
         private readonly IMapper _mapper;
         private readonly IOrderRepository _orderRepository;
         private readonly IBillRepository _billRepository;
+        private readonly IBillDetailRepository _billDetailRepository;
         private readonly IProductRepository _productRepository;
         private readonly ICategoryRepository _categoryRepository;
         private readonly IUserRepository _userRepository;
 
-        public StatisticController(IMapper mapper, IBillRepository billRepository, IOrderRepository orderRepository, IProductRepository productRepository, ICategoryRepository categoryRepository, IUserRepository userRepository)
+        public StatisticController(IMapper mapper, IBillRepository billRepository, IOrderRepository orderRepository, IProductRepository productRepository, ICategoryRepository categoryRepository, IUserRepository userRepository, IBillDetailRepository billDetailRepository)
         {
             _mapper = mapper;
             _orderRepository = orderRepository;
@@ -33,6 +35,7 @@ namespace WebSale.Controllers
             _productRepository = productRepository;
             _categoryRepository = categoryRepository;
             _userRepository = userRepository;
+            _billDetailRepository = billDetailRepository;
         }
 
         [HttpGet]
@@ -65,6 +68,20 @@ namespace WebSale.Controllers
                     Message = $"Internal Server Error: {ex.Message}"
                 };
                 return StatusCode(500, status);
+            }
+        }
+
+        [HttpGet("revenue")]
+        public async Task<IActionResult> GetMonthlyRevenue()
+        {
+            try
+            {
+                var data = await _billDetailRepository.GetMonthlyRevenueAsync();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
             }
         }
     }

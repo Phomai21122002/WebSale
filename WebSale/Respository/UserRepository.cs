@@ -36,9 +36,12 @@ namespace WebSale.Respository
             return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses.Where(ud => ud.IsDefault)).Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 
-        public async Task<PageResult<User>> GetUsers(QueryFindSoftPaginationDto queryUsers)
+        public async Task<PageResult<UserResultDto>> GetUsers(QueryFindSoftPaginationDto queryUsers)
         {
-            var query = _context.Users.Include(u => u.Role);
+            var query = _context.Users
+                            .Include(u => u.Role)
+                            .Include(u => u.UserAddresses)
+                                .ThenInclude(ua => ua.Address);
             var resUsers = await query.ToListAsync();
 
             if (!string.IsNullOrEmpty(queryUsers.Name))
@@ -82,12 +85,32 @@ namespace WebSale.Respository
                     .Take(queryUsers.PageSize).ToList();
             }
 
-            return new PageResult<User>
+            var resultUsers = resUsers.Select(u => new UserResultDto
+            {
+                Id = u.Id,
+                Email = u.Email,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Phone = u.Phone,
+                url = u.url,
+                Addresses = u.UserAddresses?.Where(ud => ud.Address != null)
+                        .Select(ud => new AddressDto
+                        {
+                            Id = ud.Address!.Id,
+                            Name = ud.Address!.Name!,
+                            Code = ud.Address.Code,
+                            IsDefault = ud.IsDefault
+                        })
+                        .ToList(),
+                Role = u.Role
+            }).ToList();
+
+            return new PageResult<UserResultDto>
             {
                 TotalCount = totalCount,
                 PageNumber = queryUsers.PageNumber,
                 PageSize = queryUsers.PageSize,
-                Datas = resUsers
+                Datas = resultUsers
             };
         }
 

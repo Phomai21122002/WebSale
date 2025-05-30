@@ -29,6 +29,7 @@ namespace WebSale.Data
         public DbSet<District> Districts { get; set; }
         public DbSet<Ward> Wards { get; set; }
         public DbSet<VnpayModel> VnInfos { get; set; }
+        public DbSet<MomoModel> MomoInfos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

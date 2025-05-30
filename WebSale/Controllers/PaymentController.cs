@@ -9,6 +9,8 @@ using WebSale.Services.Vnpay;
 using static System.Net.Mime.MediaTypeNames;
 using WebSale.Interfaces;
 using WebSale.Services.Momo;
+using System.Security.Claims;
+using Azure;
 
 namespace WebSale.Controllers
 {
@@ -33,18 +35,98 @@ namespace WebSale.Controllers
         [HttpGet("momo")]
         public async Task<IActionResult> PaymentMomoCallback()
         {
+            var status = new Status();
             var res = _momoService.PaymentExecuteAsync(HttpContext.Request.Query);
             var requestQuery = HttpContext.Request.Query;
-            if(requestQuery["resultCode"] == 0)
+            var orderId = int.Parse(requestQuery["orderId"]);
+            var order = await _orderRepository.GetOrderById(orderId);
+            if (order == null)
             {
-                Console.WriteLine("thanh cong");
-                return Ok(true);
+                status.StatusCode = 404;
+                status.Message = "Order not found";
+                return NotFound(status);
             }
-            else
+            if (requestQuery["resultCode"] != 0)
             {
-                Console.WriteLine("that bai");
-                return Ok(false);
+                var newMomoInfo = new MomoModel
+                {
+                    OrderId = requestQuery["orderId"],
+                    FullName = User.FindFirstValue(ClaimTypes.Email),
+                    Amount = double.Parse(requestQuery["Amount"]),
+                    OrderInfo = requestQuery["OrderInfo"],
+                    DatePaid = DateTime.Now,
+                };
+                var resultModelMomo = await _momoService.AddMomoModel(newMomoInfo);
+                if (resultModelMomo == null) {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while saving momo model";
+                    return NotFound(status);
+                }
+
+                order.Status = (int)OrderStatus.Pending;
+                order.Momo = resultModelMomo;
+                order.IsPayment = true;
+                order.CreatedAt = DateTime.Now;
+
+                var updateResult = await _orderRepository.UpdateOrder(order);
+                if (updateResult == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Failed to update order after payment";
+                    return BadRequest(status);
+                }
+
+                var carts = await _cartRepository.GetCarts(order?.User.Id);
+                var cartsRemoved = carts.Where(c => c.IsSelectedForOrder).ToList();
+                if (!await _cartRepository.DeleteCarts(cartsRemoved))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while deleting carts of user";
+                    return BadRequest(status);
+                }
+
+                var productDetailsId = cartsRemoved.Select(c => c.Product.ProductDetailId).ToList();
+                var productDetails = _productDetailRepository.GetProductDetails(productDetailsId);
+
+                var productDetailsUpdated = productDetails.Result.Select(pd =>
+                {
+                    var matchingCart = cartsRemoved.FirstOrDefault(c => c.Product.ProductDetailId == pd.Id);
+                    if (matchingCart != null)
+                    {
+                        pd.Quantity -= matchingCart.Quantity;
+                        pd.Sold += matchingCart.Quantity;
+                    }
+                    return pd;
+                }).ToList();
+
+                if (!await _productDetailRepository.UpdateProductDetails(productDetailsUpdated))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating product detail";
+                    return BadRequest(status);
+                }
+
+                return Ok(new
+                {
+                    Success = true,
+                    Message = "Payment successful",
+                    OrderId = order.Id,
+                    OrderDescription = resultModelMomo.OrderInfo,
+                    Amount = order.Total
+                });
             }
+            if (!await _orderRepository.DeleteOrder(order))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong while deleting order";
+                return BadRequest(status);
+            }
+            return Ok(new
+                {
+                    Success = false,
+                    StatusCode = 400,
+                    Message = "Payment was not successful",
+                });
         }
         
         [HttpGet]
@@ -52,12 +134,7 @@ namespace WebSale.Controllers
         {
             var status = new Status();
             var response = _vnPayService.PaymentExecute(Request.Query);
-            if (!response.Success)
-            {
-                status.StatusCode = 400;
-                status.Message = "Payment failed or invalid signature";
-                return BadRequest(status);
-            }
+           
             var orderId = int.Parse(response.OrderId);
             var order = await _orderRepository.GetOrderById(orderId);
             if (order == null)
@@ -66,8 +143,6 @@ namespace WebSale.Controllers
                 status.Message = "Order not found";
                 return NotFound(status);
             }
-
-            Console.WriteLine(response.VnPayResponseCode);
 
             if (response.VnPayResponseCode == "00")
             {

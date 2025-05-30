@@ -7,7 +7,7 @@ namespace WebSale.Interfaces
 {
     public interface IUserRepository
     {
-        Task<PageResult<User>> GetUsers(QueryFindSoftPaginationDto queryUsers);
+        Task<PageResult<UserResultDto>> GetUsers(QueryFindSoftPaginationDto queryUsers);
         Task<User?> GetUser(string userId);
         Task<int?> TotalUser();
         Task<UserResultDto?> GetResultUser(string userId);

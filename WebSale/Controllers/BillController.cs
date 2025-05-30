@@ -195,6 +195,15 @@ namespace WebSale.Controllers
                         status.Message = "Something went wrong while deleting order product";
                         return BadRequest(status);
                     }
+
+                    order.Status = (int)OrderStatus.Cancelled;
+                    var orderUpdated = await _orderRepository.UpdateOrder(order);
+                    if (orderUpdated == null)
+                    {
+                        status.StatusCode = 500;
+                        status.Message = "Something went wrong while updating order of user";
+                        return BadRequest(status);
+                    }
                 }
                 return Ok(bill);
 

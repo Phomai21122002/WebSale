@@ -12,8 +12,8 @@ using WebSale.Data;
 namespace WebSale.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250520072327_AddIsDeleteProductAndCategory")]
-    partial class AddIsDeleteProductAndCategory
+    [Migration("20250530160613_AddModelMoMo")]
+    partial class AddModelMoMo
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -388,6 +388,41 @@ namespace WebSale.Migrations
                     b.ToTable("ImageProducts");
                 });
 
+            modelBuilder.Entity("WebSale.Models.MomoModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("DatePaid")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderInfo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MomoModel");
+                });
+
             modelBuilder.Entity("WebSale.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -404,6 +439,9 @@ namespace WebSale.Migrations
 
                     b.Property<bool>("IsPayment")
                         .HasColumnType("bit");
+
+                    b.Property<int?>("MomoId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -430,6 +468,8 @@ namespace WebSale.Migrations
                         .HasColumnType("int");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("MomoId");
 
                     b.HasIndex("UserId");
 
@@ -902,6 +942,10 @@ namespace WebSale.Migrations
 
             modelBuilder.Entity("WebSale.Models.Order", b =>
                 {
+                    b.HasOne("WebSale.Models.MomoModel", "Momo")
+                        .WithMany()
+                        .HasForeignKey("MomoId");
+
                     b.HasOne("WebSale.Models.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId");
@@ -909,6 +953,8 @@ namespace WebSale.Migrations
                     b.HasOne("WebSale.Models.VnpayModel", "Vnpay")
                         .WithMany()
                         .HasForeignKey("VnpayId");
+
+                    b.Navigation("Momo");
 
                     b.Navigation("User");
 

@@ -19,5 +19,6 @@ namespace WebSale.Models
         public ICollection<OrderProduct>? OrderProducts { get; set; }
         public User? User { get; set; }
         public VnpayModel? Vnpay { get; set; }
+        public MomoModel? Momo { get; set; }
     }
 }

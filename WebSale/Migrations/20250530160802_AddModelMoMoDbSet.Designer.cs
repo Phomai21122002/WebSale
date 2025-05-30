@@ -12,8 +12,8 @@ using WebSale.Data;
 namespace WebSale.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250417113339_NewMigrationName")]
-    partial class NewMigrationName
+    [Migration("20250530160802_AddModelMoMoDbSet")]
+    partial class AddModelMoMoDbSet
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -55,6 +55,84 @@ namespace WebSale.Migrations
                     b.ToTable("Addresses");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Bill", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("NameOrder")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int?>("VnpayId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("VnpayId");
+
+                    b.ToTable("Bills");
+                });
+
+            modelBuilder.Entity("WebSale.Models.BillDetail", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BillId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("DescriptionDetail")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<long>("Price")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BillId");
+
+                    b.ToTable("BillDetails");
+                });
+
             modelBuilder.Entity("WebSale.Models.Cart", b =>
                 {
                     b.Property<string>("UserId")
@@ -74,6 +152,9 @@ namespace WebSale.Migrations
                         .HasColumnType("int");
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<bool>("IsSelectedForOrder")
+                        .HasColumnType("bit");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -105,6 +186,9 @@ namespace WebSale.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
@@ -116,6 +200,62 @@ namespace WebSale.Migrations
                     b.HasKey("Id");
 
                     b.ToTable("Categories");
+                });
+
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
+
+                    b.Property<string>("ParentCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "parent_code");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path");
+
+                    b.Property<string>("Path_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path_with_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("ParentCode");
+
+                    b.ToTable("Districts");
                 });
 
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
@@ -248,6 +388,41 @@ namespace WebSale.Migrations
                     b.ToTable("ImageProducts");
                 });
 
+            modelBuilder.Entity("WebSale.Models.MomoModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<double>("Amount")
+                        .HasColumnType("float");
+
+                    b.Property<DateTime>("DatePaid")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderInfo")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("MomoInfos");
+                });
+
             modelBuilder.Entity("WebSale.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -262,10 +437,20 @@ namespace WebSale.Migrations
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<bool>("IsPayment")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("MomoId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("Status")
                         .HasColumnType("int");
@@ -279,9 +464,16 @@ namespace WebSale.Migrations
                     b.Property<string>("UserId")
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int?>("VnpayId")
+                        .HasColumnType("int");
+
                     b.HasKey("Id");
 
+                    b.HasIndex("MomoId");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("VnpayId");
 
                     b.ToTable("Orders");
                 });
@@ -301,6 +493,9 @@ namespace WebSale.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Status")
                         .HasColumnType("int");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -329,6 +524,9 @@ namespace WebSale.Migrations
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -370,15 +568,18 @@ namespace WebSale.Migrations
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("Decription")
-                        .HasMaxLength(1000)
-                        .HasColumnType("nvarchar(1000)");
-
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("Description")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
                     b.Property<string>("DescriptionDetail")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("ExpiryDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<int>("Quantity")
                         .HasColumnType("int");
@@ -398,28 +599,40 @@ namespace WebSale.Migrations
                     b.ToTable("ProductDetails");
                 });
 
-            modelBuilder.Entity("WebSale.Models.Reaction", b =>
+            modelBuilder.Entity("WebSale.Models.Provinces", b =>
                 {
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(255)");
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
 
-                    b.Property<int>("FeedBackId")
-                        .HasColumnType("int");
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
 
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
 
-                    b.HasKey("UserId", "FeedBackId");
+                    b.HasKey("Code");
 
-                    b.HasIndex("FeedBackId");
-
-                    b.ToTable("Reactions");
+                    b.ToTable("Provinces");
                 });
 
             modelBuilder.Entity("WebSale.Models.Role", b =>
@@ -455,6 +668,12 @@ namespace WebSale.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
+                    b.Property<int>("Code")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("ConfirmEmail")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -481,14 +700,21 @@ namespace WebSale.Migrations
                         .HasMaxLength(255)
                         .HasColumnType("nvarchar(255)");
 
-                    b.Property<long?>("Phone")
-                        .HasColumnType("bigint");
+                    b.Property<string>("Phone")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
 
+                    b.Property<bool>("TwoFactorEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("url")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -524,6 +750,124 @@ namespace WebSale.Migrations
                     b.ToTable("UserAddresses");
                 });
 
+            modelBuilder.Entity("WebSale.Models.VnpayModel", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("DateCreated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("OrderDescription")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OrderId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("PaymentMethod")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("TransactionId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("VnInfos");
+                });
+
+            modelBuilder.Entity("WebSale.Models.Ward", b =>
+                {
+                    b.Property<string>("Code")
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "code");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name");
+
+                    b.Property<string>("Name_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "name_with_type");
+
+                    b.Property<string>("ParentCode")
+                        .IsRequired()
+                        .HasMaxLength(10)
+                        .HasColumnType("nvarchar(10)")
+                        .HasAnnotation("Relational:JsonPropertyName", "parent_code");
+
+                    b.Property<string>("Path")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path");
+
+                    b.Property<string>("Path_With_Type")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "path_with_type");
+
+                    b.Property<string>("Slug")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasAnnotation("Relational:JsonPropertyName", "slug");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)")
+                        .HasAnnotation("Relational:JsonPropertyName", "type");
+
+                    b.HasKey("Code");
+
+                    b.HasIndex("ParentCode");
+
+                    b.ToTable("Wards");
+                });
+
+            modelBuilder.Entity("WebSale.Models.Bill", b =>
+                {
+                    b.HasOne("WebSale.Models.User", "User")
+                        .WithMany("Bills")
+                        .HasForeignKey("UserId");
+
+                    b.HasOne("WebSale.Models.VnpayModel", "Vnpay")
+                        .WithMany()
+                        .HasForeignKey("VnpayId");
+
+                    b.Navigation("User");
+
+                    b.Navigation("Vnpay");
+                });
+
+            modelBuilder.Entity("WebSale.Models.BillDetail", b =>
+                {
+                    b.HasOne("WebSale.Models.Bill", "Bill")
+                        .WithMany("BillDetails")
+                        .HasForeignKey("BillId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Bill");
+                });
+
             modelBuilder.Entity("WebSale.Models.Cart", b =>
                 {
                     b.HasOne("WebSale.Models.Product", "Product")
@@ -543,10 +887,21 @@ namespace WebSale.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.HasOne("WebSale.Models.Provinces", "Provinces")
+                        .WithMany("Districts")
+                        .HasForeignKey("ParentCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Provinces");
+                });
+
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
                 {
                     b.HasOne("WebSale.Models.Product", "Product")
-                        .WithMany()
+                        .WithMany("FeedBacks")
                         .HasForeignKey("ProductId");
 
                     b.HasOne("WebSale.Models.User", "User")
@@ -587,11 +942,23 @@ namespace WebSale.Migrations
 
             modelBuilder.Entity("WebSale.Models.Order", b =>
                 {
+                    b.HasOne("WebSale.Models.MomoModel", "Momo")
+                        .WithMany()
+                        .HasForeignKey("MomoId");
+
                     b.HasOne("WebSale.Models.User", "User")
                         .WithMany("Orders")
                         .HasForeignKey("UserId");
 
+                    b.HasOne("WebSale.Models.VnpayModel", "Vnpay")
+                        .WithMany()
+                        .HasForeignKey("VnpayId");
+
+                    b.Navigation("Momo");
+
                     b.Navigation("User");
+
+                    b.Navigation("Vnpay");
                 });
 
             modelBuilder.Entity("WebSale.Models.OrderProduct", b =>
@@ -630,25 +997,6 @@ namespace WebSale.Migrations
                     b.Navigation("ProductDetail");
                 });
 
-            modelBuilder.Entity("WebSale.Models.Reaction", b =>
-                {
-                    b.HasOne("WebSale.Models.FeedBack", "FeedBack")
-                        .WithMany("Reactions")
-                        .HasForeignKey("FeedBackId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("WebSale.Models.User", "User")
-                        .WithMany("Reactions")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("FeedBack");
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("WebSale.Models.User", b =>
                 {
                     b.HasOne("WebSale.Models.Role", "Role")
@@ -677,9 +1025,25 @@ namespace WebSale.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Ward", b =>
+                {
+                    b.HasOne("WebSale.Models.District", "District")
+                        .WithMany("Wards")
+                        .HasForeignKey("ParentCode")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("District");
+                });
+
             modelBuilder.Entity("WebSale.Models.Address", b =>
                 {
                     b.Navigation("UserAddresses");
+                });
+
+            modelBuilder.Entity("WebSale.Models.Bill", b =>
+                {
+                    b.Navigation("BillDetails");
                 });
 
             modelBuilder.Entity("WebSale.Models.Category", b =>
@@ -689,11 +1053,14 @@ namespace WebSale.Migrations
                     b.Navigation("Products");
                 });
 
+            modelBuilder.Entity("WebSale.Models.District", b =>
+                {
+                    b.Navigation("Wards");
+                });
+
             modelBuilder.Entity("WebSale.Models.FeedBack", b =>
                 {
                     b.Navigation("ImageFeedBacks");
-
-                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("WebSale.Models.Order", b =>
@@ -705,6 +1072,8 @@ namespace WebSale.Migrations
                 {
                     b.Navigation("Carts");
 
+                    b.Navigation("FeedBacks");
+
                     b.Navigation("ImageProducts");
 
                     b.Navigation("OrderProducts");
@@ -715,15 +1084,20 @@ namespace WebSale.Migrations
                     b.Navigation("Product");
                 });
 
+            modelBuilder.Entity("WebSale.Models.Provinces", b =>
+                {
+                    b.Navigation("Districts");
+                });
+
             modelBuilder.Entity("WebSale.Models.User", b =>
                 {
+                    b.Navigation("Bills");
+
                     b.Navigation("Carts");
 
                     b.Navigation("FeedBacks");
 
                     b.Navigation("Orders");
-
-                    b.Navigation("Reactions");
 
                     b.Navigation("UserAddresses");
                 });

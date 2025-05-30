@@ -5,6 +5,7 @@ using Org.BouncyCastle.Asn1.Crmf;
 using RestSharp;
 using System.Security.Cryptography;
 using System.Text;
+using WebSale.Data;
 using WebSale.Models;
 using WebSale.Models.Momo;
 
@@ -13,7 +14,13 @@ namespace WebSale.Services.Momo
     public class MomoService : IMomoService
     {
         private readonly IOptions<MomoOptionModel> _options;
-        public MomoService(IOptions<MomoOptionModel> options) { _options = options; }
+        private readonly DataContext _dbContext;
+
+        public MomoService(IOptions<MomoOptionModel> options, DataContext dataContext) {
+            _options = options;
+            _dbContext = dataContext;
+        }
+
         public async Task<MomoCreatePaymentResponseModel> CreatePaymentAsync(OrderInfo model)
         {
             model.OrderId = DateTime.UtcNow.Ticks.ToString();
@@ -71,6 +78,13 @@ namespace WebSale.Services.Momo
                 OrderId = orderId,
                 OrderInfo = orderInfo
             };
+        }
+
+        public async Task<MomoModel> AddMomoModel(MomoModel momoModel)
+        {
+            await _dbContext.AddAsync(momoModel);
+            await _dbContext.SaveChangesAsync();
+            return momoModel;
         }
 
 

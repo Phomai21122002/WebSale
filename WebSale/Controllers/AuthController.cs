@@ -259,11 +259,13 @@ namespace WebSale.Controllers
                     ConfirmEmail = true,
                     CreatedAt = DateTime.Now,
                     TwoFactorEnabled = true,
+                    url = "",
+                    Phone = "",
                     Code = new Random().Next(100000, 999999),
+                    Role = role
                 };
 
                 user = await _userRepository.CreateUser(newUser);
-                user.Role = role;
                 if (user == null)
                     return Content("<script>window.close();</script>", "text/html");
 
@@ -351,22 +353,24 @@ namespace WebSale.Controllers
                     CreatedAt = DateTime.Now,
                     TwoFactorEnabled = true,
                     Code = new Random().Next(100000, 999999),
+                    url = "",
+                    Phone = "",
+                    Role = role
                 };
 
                 user = await _userRepository.CreateUser(newUser);
-                user.Role = role;
                 if (user == null)
                     return Content("<script>window.close();</script>", "text/html");
             }
 
             var claimsToken = new List<Claim>
-    {
-        new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
-        new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
-        new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
-        new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty),
-        new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
-    };
+                {
+                    new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
+                    new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                    new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
+                    new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty),
+                    new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+                };
 
             var tokens = _tokenService.GetToken(claimsToken);
             var refreshToken = _tokenService.GetRefreshToken();
