@@ -61,5 +61,19 @@ namespace WebSale.Respository
             string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
             return new TokenDto { Token = tokenString, Expiration = token.ValidTo };
         }
+
+        public TokenDto GetTokenResetPassword(IEnumerable<Claim> claim)
+        {
+            var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]));
+            var token = new JwtSecurityToken(
+                issuer: _configuration["JWT:ValidIssuer"],
+                audience: _configuration["JWT:ValidAudience"],
+                expires: DateTime.Now.AddMinutes(5),
+                claims: claim,
+                signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
+                );
+            string tokenString = new JwtSecurityTokenHandler().WriteToken(token);
+            return new TokenDto { Token = tokenString, Expiration = token.ValidTo };
+        }
     }
 }

@@ -9,6 +9,7 @@ namespace WebSale.Interfaces
     {
         Task<PageResult<UserResultDto>> GetUsers(QueryFindSoftPaginationDto queryUsers);
         Task<User?> GetUser(string userId);
+        Task<User?> GetUserByEmail(string email);
         Task<int?> TotalUser();
         Task<UserResultDto?> GetResultUser(string userId);
         Task<bool> UserExists(string userId);

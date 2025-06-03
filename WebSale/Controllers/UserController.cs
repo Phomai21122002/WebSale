@@ -21,13 +21,15 @@ namespace WebSale.Controllers
         private readonly IUserRepository _userRepository;
         private readonly ILoginRepository _loginRepository;
         private readonly IRoleRepository _roleRepository;
+        private readonly ITokenService _tokenService;
 
-        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository, IRoleRepository roleRepository)
+        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository, IRoleRepository roleRepository, ITokenService tokenService)
         {
             _mapper = mapper;
             _userRepository = userRepository;
             _loginRepository = loginRepository;
             _roleRepository = roleRepository;
+            _tokenService = tokenService;
         }
 
         [Authorize]
@@ -141,7 +143,7 @@ namespace WebSale.Controllers
 
         [Authorize]
         [HttpPatch("change-password")]
-        public async Task<IActionResult> UpdatePassword([FromQuery] string userId, [FromBody] UserChangePassWordDto changePassUser)
+        public async Task<IActionResult> UpdatePassword([FromQuery] string email, [FromBody] UserChangePassWordDto changePassUser)
         {
             var status = new Status();
             if (changePassUser == null)
@@ -150,14 +152,14 @@ namespace WebSale.Controllers
                 status.Message = "Please fill in all required info fields";
                 return BadRequest(status);
             }
-            if (!await _userRepository.UserExists(userId))
+            var user = await _userRepository.GetUserByEmail(email);
+            if (user == null)
             {
                 status.StatusCode = 402;
                 status.Message = "User not exists";
                 return BadRequest(status);
             }
-            var user = await _userRepository.GetUser(userId);
-            if (user == null || !await _loginRepository.CheckPassword(HashPassword.HashPass(changePassUser.Password)))
+            if (!await _loginRepository.CheckPassword(HashPassword.HashPass(changePassUser.Password)))
             {
                 status.StatusCode = 400;
                 status.Message = "Change password fail";
@@ -165,6 +167,40 @@ namespace WebSale.Controllers
             }
 
             user.Password = HashPassword.HashPass(changePassUser.NewPassword);
+
+            if (!await _userRepository.UpdateUser(user))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
+
+            return Ok(user);
+        }
+
+        [HttpPatch("forgot-password")]
+        public async Task<IActionResult> ForgotPassword([FromBody] ResetPasswordDto resetPassword)
+        {
+            var status = new Status();
+            if (resetPassword == null)
+            {
+                status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
+
+            var principal = _tokenService.GetPrincipalFromExpiredToken(resetPassword.Token);
+            var email = principal.FindFirst(ClaimTypes.Email)?.Value;
+
+            var user = await _userRepository.GetUserByEmail(email);
+            if (user == null)
+            {
+                status.StatusCode = 402;
+                status.Message = "User not exists";
+                return BadRequest(status);
+            }
+
+            user.Password = HashPassword.HashPass(resetPassword.NewPassword);
 
             if (!await _userRepository.UpdateUser(user))
             {

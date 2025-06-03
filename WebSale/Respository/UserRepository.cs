@@ -36,6 +36,11 @@ namespace WebSale.Respository
             return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses.Where(ud => ud.IsDefault)).Where(u => u.Id == userId).FirstOrDefaultAsync();
         }
 
+        public async Task<User?> GetUserByEmail(string email)
+        {
+            return await _context.Users.Include(u => u.Role).Include(u => u.UserAddresses.Where(ud => ud.IsDefault)).Where(u => u.Email == email).FirstOrDefaultAsync();
+        }
+
         public async Task<PageResult<UserResultDto>> GetUsers(QueryFindSoftPaginationDto queryUsers)
         {
             var query = _context.Users
@@ -159,8 +164,6 @@ namespace WebSale.Respository
         public async Task<User?> CheckCode(string email, int code)
         {
             var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == email && u.Code == code);
-            if (user == null || user.ConfirmEmail)
-                return null;
             return user;
         }
 

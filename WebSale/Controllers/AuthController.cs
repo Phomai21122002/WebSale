@@ -145,12 +145,82 @@ namespace WebSale.Controllers
             return Ok(status);
         }
 
-        [HttpPost("Logout")]
+        [HttpPost("SendCode")]
+        public async Task<IActionResult> SendCodeForEmail([FromQuery] string email)
+        {
+            var status = new Status();
+            if (string.IsNullOrEmpty(email))
+            {
+                status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
 
+            var user = await _userRepository.GetUserByEmail(email);
+            if (user == null)
+            {
+                status.StatusCode = 402;
+                status.Message = "User not exists";
+                return BadRequest(status);
+            }
+
+            user.Code = new Random().Next(100000, 999999);
+
+            if (!await _userRepository.UpdateUser(user))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
+
+            var message = new Message(new string[] { email }, "Mã xác nhận tài khoản", $"Mã xác nhận của bạn là: {user.Code}");
+            _emailService.SendEmail(message);
+
+            status.StatusCode = 200;
+            status.Message = "Send code for email successfully";
+            return Ok(status);
+        }
+
+        [HttpPost("Logout")]
         public async Task<IActionResult> Logout()
         {
             await HttpContext.SignOutAsync();
             return Ok(true);
+        }
+
+        [HttpPost("confirmCodeResetPassword")]
+        public async Task<IActionResult> ConfirmCode([FromQuery] string email, [FromQuery] int code)
+        {
+            var status = new Status();
+            if (string.IsNullOrEmpty(email) || code == 0)
+            {
+                status.StatusCode = 400;
+                status.Message = "Please fill in all required info fields";
+                return BadRequest(status);
+            }
+
+            var owner = await _userRepository.CheckCode(email, code);
+
+            if (owner == null)
+            {
+                status.StatusCode = 404;
+                status.Message = "Invalid email and code";
+                return BadRequest(status);
+            }
+
+            var claims = new List<Claim> {
+                new Claim(ClaimTypes.Email, owner.Email ?? string.Empty),
+            };
+
+            var tokens = _tokenService.GetTokenResetPassword(claims);
+            var result = new
+            {
+                Token = tokens.Token,
+                Expiration = tokens.Expiration,
+                Email = owner?.Email,
+            };
+
+            return Ok(result);
         }
 
         [HttpPost("confirmEmail")]
@@ -316,6 +386,9 @@ namespace WebSale.Controllers
             return Challenge(properties, FacebookDefaults.AuthenticationScheme);
         }
 
+        // /reset
+        // /verify/email?email=....
+
         [HttpGet("facebook-response")]
         public async Task<IActionResult> FacebookResponse([FromQuery] string returnUrl = "/")
         {
@@ -376,20 +449,20 @@ namespace WebSale.Controllers
             var refreshToken = _tokenService.GetRefreshToken();
 
             var html = $@"
-        <html>
-        <body>
-        <script>
-            window.opener.postMessage({{
-                token: '{tokens.Token}',
-                refreshToken: '{refreshToken}',
-                email: '{user.Email}',
-                firstName: '{user.FirstName}',
-                lastName: '{user.LastName}'
-            }}, '*');
-            window.close();
-        </script>
-        </body>
-        </html>";
+                <html>
+                <body>
+                <script>
+                    window.opener.postMessage({{
+                        token: '{tokens.Token}',
+                        refreshToken: '{refreshToken}',
+                        email: '{user.Email}',
+                        firstName: '{user.FirstName}',
+                        lastName: '{user.LastName}'
+                    }}, '*');
+                    window.close();
+                </script>
+                </body>
+                </html>";
 
             return Content(html, "text/html");
         }
