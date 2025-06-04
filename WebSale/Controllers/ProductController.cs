@@ -64,10 +64,9 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("products")]
-        public async Task<IActionResult> GetProducts([FromQuery] QueryFindSoftPaginationDto queryProducts)
+        public async Task<IActionResult> GetProducts([FromQuery(Name = "categoryId")] int CategoryId, [FromQuery] QueryFindSoftPaginationDto queryProducts)
         {
-            var status = new Status();
-            var products = await _productRepository.GetProducts(queryProducts);
+            var products = await _productRepository.GetProducts(CategoryId, queryProducts);
             return Ok(products);
         }
 

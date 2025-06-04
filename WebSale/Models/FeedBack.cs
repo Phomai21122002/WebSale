@@ -9,6 +9,7 @@ namespace WebSale.Models
         [Required]
         [MaxLength(1000)]
         public string? Content { get; set; }
+        public int Rate { get; set; }
         public ICollection<ImageFeedBack>? ImageFeedBacks { get; set; }
         public Product? Product { get; set; }
         public User? User { get; set; }

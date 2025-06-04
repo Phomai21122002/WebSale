@@ -115,7 +115,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                if (!await _productRepository.ProductExists(feedbackDto.productId))
+                if (!await _productRepository.ProductExists(feedbackDto.ProductId))
                 {
                     status.StatusCode = 400;
                     status.Message = "Product does not exists";
@@ -129,10 +129,11 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
                 var user = await _userRepository.GetUser(userId);
-                var product = await _productRepository.GetProduct(feedbackDto.productId);
+                var product = await _productRepository.GetProduct(feedbackDto.ProductId);
                 var feedback = new FeedBack
                 {
                     Content = feedbackDto.Content,
+                    Rate = feedbackDto.Rate,
                     User = user,
                     Product = product,
                     CreatedAt = DateTime.Now
@@ -193,7 +194,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
                 var user = await _userRepository.GetUser(userId);
-                var product = await _productRepository.GetProduct(feedbackDto.productId);
+                var product = await _productRepository.GetProduct(feedbackDto.ProductId);
 
                 var feedback = await _feedBackRepository.GetFeedBackByFeedBackId(userId, feedbackId);
                 feedback.Content = feedbackDto.Content;

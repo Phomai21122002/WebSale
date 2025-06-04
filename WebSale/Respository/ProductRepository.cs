@@ -47,12 +47,12 @@ namespace WebSale.Respository
             return await _dataContext.Products.Include(p => p.ImageProducts).Include(p => p.Category).Include(p => p.ProductDetail).FirstOrDefaultAsync(p => p.Id == id);
         }
 
-        public async Task<PageResult<ProductResultDto>> GetProducts(QueryFindSoftPaginationDto queryProducts)
+        public async Task<PageResult<ProductResultDto>> GetProducts(int CategoryId, QueryFindSoftPaginationDto queryProducts)
         {
             var baseQuery = _dataContext.Products
-                .Where(p => !p.IsDeleted)
+                .Where(p => !p.IsDeleted && (CategoryId == 0 || (p.Category != null && p.Category.Id == CategoryId)))
                 .Include(p => p.ImageProducts)
-                .Include(p => p.Category)   
+                .Include(p => p.Category)
                     .ThenInclude(c => c.ImageCategories)
                 .Include(p => p.ProductDetail);
 
