@@ -327,6 +327,9 @@ namespace WebSale.Respository
             return await _dataContext.Orders
                 .Where(o => o.Id == orderId && o.User != null && o.User.Id == userId)
                 .Include(o => o.User)
+                    .ThenInclude(u => u.UserAddresses
+                        .Where(ua => ua.IsDefault && ua.UserId == userId))
+                        .ThenInclude(ua => ua.Address)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
                         .ThenInclude(p => p.ProductDetail)

@@ -143,7 +143,7 @@ namespace WebSale.Controllers
 
         [Authorize]
         [HttpPatch("change-password")]
-        public async Task<IActionResult> UpdatePassword([FromQuery] string email, [FromBody] UserChangePassWordDto changePassUser)
+        public async Task<IActionResult> UpdatePassword([FromQuery] string userId, [FromBody] UserChangePassWordDto changePassUser)
         {
             var status = new Status();
             if (changePassUser == null)
@@ -152,7 +152,7 @@ namespace WebSale.Controllers
                 status.Message = "Please fill in all required info fields";
                 return BadRequest(status);
             }
-            var user = await _userRepository.GetUserByEmail(email);
+            var user = await _userRepository.GetUser(userId);
             if (user == null)
             {
                 status.StatusCode = 402;

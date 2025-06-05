@@ -55,6 +55,10 @@ namespace WebSale.Respository
             {
                 Id = bill.Id,
                 NameOrder = bill.NameOrder,
+                Email = bill.Email,
+                FullName = bill.FullName,
+                Phone = bill.Phone,
+                Address = bill.Address,
                 PaymentMethod = bill.PaymentMethod,
                 QuantityProduct = bill.BillDetails.Count,
                 Total = bill.BillDetails.Sum(bd => bd.Quantity),

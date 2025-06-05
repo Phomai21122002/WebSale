@@ -133,17 +133,23 @@ namespace WebSale.Controllers
                 }
 
                 var order = await _orderRepository.GetOrderByUserId(inputUserId, inputOrderId);
-
                 var orderProducts = await _orderProductRepository.GetOrderProducts(inputUserId, inputOrderId);
 
                 var orderProductsNoCancel = orderProducts
                 .Where(op => op.Status != (int)OrderStatus.Cancelled)
                 .ToList();
 
+                var defaultAddress = order.User?.UserAddresses?
+                                        .FirstOrDefault(ua => ua.IsDefault)?.Address?.Name ?? "No default address";
+
                 var bill = new Bill
                 {
                     NameOrder = order.Name,
                     PaymentMethod = order.PaymentMethod,
+                    Email = order.User.Email,
+                    Phone = order.User.Phone,
+                    FullName = order.User.LastName + " " + order.User.FirstName,
+                    Address = defaultAddress,
                     User = order.User,
                     Vnpay = order.Vnpay,
                     CreatedAt = DateTime.Now
@@ -178,33 +184,30 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
 
-                if(orderProducts.Count == orderProductsNoCancel.Count)
+                foreach (var op in orderProductsNoCancel)
                 {
-                    if (!await _orderRepository.DeleteOrder(order))
-                    {
-                        status.StatusCode = 500;
-                        status.Message = "Something went wrong while deleting order";
-                        return BadRequest(status);
+                    if (op.Status == (int)OrderStatus.Processing) {
+                        op.Status += 1;
                     }
                 }
-                else
-                {
-                    if (!await _orderProductRepository.DeleteOrderProducts(orderProductsNoCancel))
-                    {
-                        status.StatusCode = 500;
-                        status.Message = "Something went wrong while deleting order product";
-                        return BadRequest(status);
-                    }
 
-                    order.Status = (int)OrderStatus.Cancelled;
-                    var orderUpdated = await _orderRepository.UpdateOrder(order);
-                    if (orderUpdated == null)
-                    {
-                        status.StatusCode = 500;
-                        status.Message = "Something went wrong while updating order of user";
-                        return BadRequest(status);
-                    }
+                var orderProductsUpdated = await _orderProductRepository.UpdateOrderProducts(orderProductsNoCancel);
+                if (orderProductsUpdated == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating order product of user";
+                    return BadRequest(status);
                 }
+                order.Status += 1;
+
+                var orderUpdated = await _orderRepository.UpdateOrder(order);
+                if (orderUpdated == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while updating order of user";
+                    return BadRequest(status);
+                }
+                
                 return Ok(bill);
 
             }

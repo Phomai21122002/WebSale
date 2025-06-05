@@ -131,12 +131,11 @@ namespace WebSale.Respository
         public async Task<PageResult<ProductResultDto>> GetProductsByIdCategory(int categoryId, QuerySoftPaginationDto queryProducts)
         {
             var query = _dataContext.Products
-                .Where(p => !p.IsDeleted)
+                .Where(p => !p.IsDeleted && (categoryId == 0 || (p.Category != null && p.Category.Id == categoryId)))
                 .Include(p => p.ImageProducts)
                 .Include(p => p.Category)
                     .ThenInclude(c => c.ImageCategories)
                 .Include(p => p.ProductDetail)
-                .Where(p => p.Category.Id == categoryId)
                 .AsQueryable();
 
             var totalCount = await query.CountAsync();
