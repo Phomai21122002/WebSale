@@ -65,6 +65,7 @@ namespace WebSale.Models
 
             if (File.Exists(descriptionDetailFilePath))
             {
+                Console.WriteLine(descriptionDetailFilePath);
                 File.WriteAllText(descriptionDetailFilePath, descriptionDetail);
                 return true;
             }

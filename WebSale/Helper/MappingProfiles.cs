@@ -18,7 +18,8 @@ namespace WebSale.Helper
             CreateMap<UserBaseDto, User>();
             CreateMap<CategoryBase, Category>();
             CreateMap<CategoryDto, Category>();
-            CreateMap<ProductDetailDto, ProductDetail>();
+            CreateMap<ProductDetailDto, ProductDetail>()
+                .ForMember(dest => dest.DescriptionDetail, opt => opt.Ignore());
             CreateMap<ProductDetailDto, Product>();
             CreateMap<Product, ProductDetail>();
             CreateMap<AddressCreateDto, Address>();

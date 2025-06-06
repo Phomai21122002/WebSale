@@ -209,13 +209,19 @@ namespace WebSale.Controllers
                 
                 if (!productDetail.UpdateDescriptionFile(productDetailDto.DescriptionDetail, productDetail.DescriptionDetail))
                 {
+                    Console.WriteLine("Tao moi");
                     productDetail.SaveDescriptionToFile();
                 }
+
+                string jsonStringproductDetail1 = JsonSerializer.Serialize(productDetail, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.Preserve });
+                Console.WriteLine("productDetail1");
+                Console.WriteLine(jsonStringproductDetail1);
+
                 _mapper.Map(productDetailDto, productDetail);
 
-                //string jsonStringproductDetail = JsonSerializer.Serialize(productDetail, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.Preserve });
-                //Console.WriteLine("productDetail");
-                //Console.WriteLine(jsonStringproductDetail);
+                string jsonStringproductDetail = JsonSerializer.Serialize(productDetail, new JsonSerializerOptions { WriteIndented = true, ReferenceHandler = ReferenceHandler.Preserve });
+                Console.WriteLine("productDetail");
+                Console.WriteLine(jsonStringproductDetail);
 
                 if (!await _productDetailRepository.UpdateProductDetail(productDetail))
                 {
