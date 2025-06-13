@@ -12,6 +12,8 @@ namespace WebSale.Dto.ProductDetails
         [Range(0, long.MaxValue, ErrorMessage = "Price must be non-negative")]
         public long Price { get; set; }
         [Required]
+        public int? Count { get; set; }
+        [Required]
         public List<string>? Urls { get; set; }
         [Required]
         public string? Slug { get; set; }

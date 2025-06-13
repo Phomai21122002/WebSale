@@ -145,7 +145,8 @@ namespace WebSale.Respository
                     Urls = cp.Product?.ImageProducts?.Select(ip => ip.Url).ToList(),
                     Description = cp.Product?.ProductDetail?.Description,
                     DescriptionDetail = cp.Product?.ProductDetail?.GetDescriptionFromFile(),
-                    Quantity = cp.Quantity,
+                    Quantity = cp.Product?.ProductDetail?.Quantity,
+                    Count = cp.Quantity,
                     Tag = cp.Product?.ProductDetail?.Tag,
                     Sold = cp.Product?.ProductDetail?.Sold ?? 0,
                     Slug = cp.Product.Slug

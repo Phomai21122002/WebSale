@@ -10,7 +10,7 @@ namespace WebSale.Dto.ProductDetails
         public string? DescriptionDetail { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
-        public int Quantity { get; set; }
+        public int? Quantity { get; set; }
         [MaxLength(255)]
         public string? Tag { get; set; }
         public DateTime? ExpiryDate { get; set; }

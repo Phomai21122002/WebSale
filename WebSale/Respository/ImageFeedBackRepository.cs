@@ -17,9 +17,17 @@ namespace WebSale.Respository
                 (url, feedback) => new ImageFeedBack { Url =  url, FeedBack = (FeedBack)feedback });
         }
 
-        public Task<bool> DeleteImagesFeedBack(int idFeedBack, List<string> imagesFeedBack)
+        public async Task<bool> DeleteImagesFeedBack(ICollection<ImageFeedBack> imagesFeedback)
         {
-            throw new NotImplementedException();
+            if (imagesFeedback.Count <= 0)
+            {
+                return true;
+            }
+            foreach (var image in imagesFeedback)
+            {
+                _dataContext.ImageFeedBacks.Remove(image);
+            }
+            return await Save();
         }
 
         public async Task<ICollection<ImageFeedBack>> GetImageFeedBackByIdFeedBack(int idFeedBack)
@@ -30,6 +38,10 @@ namespace WebSale.Respository
         public Task<bool> ImageFeedBackExists(int idFeedBack, string imagesFeedBack)
         {
             throw new NotImplementedException();
+        }
+        public new async Task<bool> Save()
+        {
+            return await _dataContext.SaveChangesAsync() > 0;
         }
 
         public async Task<bool> UpdateImagesFeedBack(int idFeedBack, List<string> imagesFeedBack)

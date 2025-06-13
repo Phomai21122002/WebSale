@@ -198,6 +198,7 @@ namespace WebSale.Controllers
 
                 var feedback = await _feedBackRepository.GetFeedBackByFeedBackId(userId, feedbackId);
                 feedback.Content = feedbackDto.Content;
+                feedback.Rate = feedbackDto.Rate;
 
                 var feedbackUpdated = await _feedBackRepository.UpdateFeedBack(feedback);
                 if (feedbackUpdated == null)
@@ -233,8 +234,7 @@ namespace WebSale.Controllers
             var status = new Status();
             try
             {
-                var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (feedbackId == null || inputUserId != userId)
+                if (feedbackId == null)
                 {
                     status.StatusCode = 400;
                     status.Message = "Please fill in all required into fields";
@@ -247,15 +247,21 @@ namespace WebSale.Controllers
                     status.Message = "Feedback does not exists";
                     return BadRequest(status);
                 }
-                if (!await _userRepository.UserExists(userId))
+                if (!await _userRepository.UserExists(inputUserId))
                 {
                     status.StatusCode = 400;
                     status.Message = "User does not exists";
                     return BadRequest(status);
                 }
 
-                var feedback = await _feedBackRepository.GetFeedBackByFeedBackId(userId, feedbackId);
-               
+                var feedback = await _feedBackRepository.GetFeedBackByFeedBackId(inputUserId, feedbackId);
+                if (!await _imageFeedBackRepository.DeleteImagesFeedBack(feedback.ImageFeedBacks))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while deleting feedback";
+                    return BadRequest(status);
+                }
+
                 var feedbackUpdated = await _feedBackRepository.DeleteFeedBack(feedback);
                 if (feedbackUpdated == null)
                 {
