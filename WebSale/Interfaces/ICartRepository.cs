@@ -12,7 +12,7 @@ namespace WebSale.Interfaces
         Task<Cart?> GetCartByIdProduct(string userId, int productId);
         Task<CartDetailDto> GetCartByUserId(string userId, int cartId);
         Task<ICollection<CartDetailDto>> GetCartsByUserId(string userId);
-        Task<ICollection<Cart>> GetCartsByCartsId(string userId, CreateOrderDto createOrderDtos);
+        Task<ICollection<Cart>> GetCartsByCartsId(string userId, ICollection<int> cartsId);
         Task<Cart> CreateCart(Cart cart);
         Task<bool> UpdateCart(Cart cart);
         Task<bool> UpdateCarts(IEnumerable<Cart> carts);

@@ -3,6 +3,6 @@
     public class CartDeleteDto
     {
         public string? UserId { get; set; }
-        public int CartId { get; set; }
+        public ICollection<int>? CartsId { get; set; }
     }
 }

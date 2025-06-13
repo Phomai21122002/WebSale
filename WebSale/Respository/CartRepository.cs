@@ -41,6 +41,12 @@ namespace WebSale.Respository
             return await Save();
         }
 
+        public async Task<bool> DeleteCarts(ICollection<Cart> carts)
+        {
+            _dataContext.RemoveRange(carts);
+            return await Save();
+        }
+
         public async Task<Cart?> GetCart(string userId, int cartId)
         {
             return await _dataContext.Carts.Where(c => c.Id == cartId && c.User != null && c.User.Id == userId).Include(c => c.User).Include(c => c.Product).FirstOrDefaultAsync();
@@ -51,10 +57,10 @@ namespace WebSale.Respository
             return await _dataContext.Carts.Where(c => c.Product != null && c.Product.Id == productId && c.User != null && c.User.Id == userId).Include(c => c.User).Include(c => c.Product).FirstOrDefaultAsync();
         }
 
-        public async Task<ICollection<Cart>> GetCartsByCartsId(string userId, CreateOrderDto createOrderDtos)
+        public async Task<ICollection<Cart>> GetCartsByCartsId(string userId, ICollection<int> cartsId)
         {
             var cartRes = await _dataContext.Carts
-                .Where(c => createOrderDtos.CartsId.Contains(c.Id) && c.User != null && c.User.Id == userId)
+                .Where(c => cartsId.Contains(c.Id) && c.User != null && c.User.Id == userId)
                 .Include(c => c.Product)
                     .ThenInclude(cp => cp.ProductDetail)
                 .Include(c => c.Product)
@@ -188,10 +194,6 @@ namespace WebSale.Respository
 
             return await Save();
         }
-        public async Task<bool> DeleteCarts(ICollection<Cart> carts)
-        {
-            _dataContext.Carts.RemoveRange(carts);
-            return await Save();
-        }
+        
     }
 }

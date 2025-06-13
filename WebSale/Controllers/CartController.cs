@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using WebSale.Dto.Carts;
+using WebSale.Dto.Orders;
 using WebSale.Interfaces;
 using WebSale.Models;
 
@@ -254,29 +255,29 @@ namespace WebSale.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-                if (cartDeleteDto == null || userId != cartDeleteDto?.UserId || !await _cartRepository.CartExists(cartDeleteDto.CartId))
+                if (cartDeleteDto == null || userId != cartDeleteDto?.UserId || cartDeleteDto.CartsId == null || !cartDeleteDto.CartsId.Any())
                 {
                     status.StatusCode = 400;
                     status.Message = "Please complete all required fields with accurate and complete information.";
                     return BadRequest(status);
                 }
+                var carts = await _cartRepository.GetCartsByCartsId(cartDeleteDto.UserId, cartDeleteDto.CartsId);
 
-                var cart = await _cartRepository.GetCart(userId, cartDeleteDto.CartId);
-                if (cart == null)
+                if (carts.Count == 0)
                 {
-                    status.StatusCode = 404;
-                    status.Message = "Cart not found.";
+                    status.StatusCode = 400;
+                    status.Message = "Cart not Exists";
                     return BadRequest(status);
                 }
 
-                if (!await _cartRepository.DeleteCart(cart))
+                if (!await _cartRepository.DeleteCarts(carts))
                 {
                     status.StatusCode = 500;
-                    status.Message = "Something went wrong while updating cart";
+                    status.Message = "Something went wrong while deleting cart";
                     return BadRequest(status);
                 }
                
-                return Ok(cart);
+                return Ok(carts);
             }
             catch (Exception ex)
             {

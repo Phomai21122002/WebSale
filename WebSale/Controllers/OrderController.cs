@@ -201,7 +201,7 @@ namespace WebSale.Controllers
                 }
 
                 var user = await _userRepository.GetUser(userId);
-                var carts = await _cartRepository.GetCartsByCartsId(inputUserId, createOrderDto);
+                var carts = await _cartRepository.GetCartsByCartsId(inputUserId, createOrderDto.CartsId);
 
                 if(carts.Count == 0)
                 {
