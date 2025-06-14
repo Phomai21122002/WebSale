@@ -58,7 +58,7 @@ namespace WebSale.Respository
 
             var resProducts = await baseQuery.ToListAsync();
 
-            if (!string.IsNullOrEmpty(queryProducts.Name))
+            if (!string.IsNullOrWhiteSpace(queryProducts.Name))
             {
                 var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryProducts.Name.ToLower());
                 resProducts = resProducts

@@ -456,6 +456,7 @@ namespace WebSale.Controllers
                     return BadRequest(status);
                 }
                 order.Status = (int)OrderStatus.Cancelled;
+                order.Total = order.OrderProducts.Sum(op => op.Quantity * op.Product.Price);
 
                 var orderUpdated = await _orderRepository.UpdateOrder(order);
                 if (orderUpdated == null)

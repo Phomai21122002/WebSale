@@ -30,6 +30,22 @@ namespace WebSale.Respository
             _dataContext = dataContext;
         }
 
+        public async Task<ICollection<Bill>> GetBills(string userId)
+        {
+            return await _dataContext.Bills
+                .Where(o => o.User != null && o.User.Id == userId)
+                .Include(o => o.User)
+                    .ThenInclude(op => op.UserAddresses)
+                        .ThenInclude(op => op.Address)
+                .ToListAsync();
+        }
+
+        public async Task<bool> UpdateBill(Bill bill)
+        {
+            _dataContext.Update(bill);
+            return await _dataContext.SaveChangesAsync() > 0;
+        }
+
         public async Task<bool> BillExists(string userId, int billId)
         {
             return await _dataContext.Bills.AnyAsync(o => o.Id == billId && o.User != null && o.User.Id == userId);

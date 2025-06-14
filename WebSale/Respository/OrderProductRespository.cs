@@ -28,9 +28,10 @@ namespace WebSale.Respository
             return orderProduct;
         }
 
-        public Task<bool> DeleteOrderProduct(OrderProduct orderProduct)
+        public async Task<bool> DeleteOrderProduct(OrderProduct orderProduct)
         {
-            throw new NotImplementedException();
+            _dataContext.Remove(orderProduct);
+            return await Save();
         }
 
         public async Task<bool> DeleteOrderProducts(ICollection<OrderProduct> orderProducts)
@@ -113,7 +114,8 @@ namespace WebSale.Respository
                     Id = op.Product.Id,
                     Name = op.Product.Name,
                     Price = op.Product.Price,
-                    Quantity = op.Quantity,
+                    Quantity = op.Product.ProductDetail?.Quantity,
+                    Count = op.Quantity,
                     Slug = op.Product.Slug,
                     Description = op.Product.ProductDetail?.Description,
                     Sold = op.Product.ProductDetail?.Sold ?? 0,

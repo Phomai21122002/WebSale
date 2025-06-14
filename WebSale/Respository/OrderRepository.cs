@@ -40,9 +40,30 @@ namespace WebSale.Respository
             return await Save();
         }
 
+        public async Task<bool> DeleteOrders(ICollection<Order> orders)
+        {
+            _dataContext.RemoveRange(orders);
+            return await Save();
+        }
+
         public async Task<ICollection<Order>> GetOrders(string userId)
         {
-            return await _dataContext.Orders.Where(o => o.User != null && o.User.Id == userId).ToListAsync();
+            return await _dataContext.Orders
+                .Where(o => o.User != null && o.User.Id == userId)
+                .Include(o => o.User)
+                    .ThenInclude(op => op.UserAddresses)
+                        .ThenInclude(op => op.Address)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ProductDetail)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.ImageProducts)
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                        .ThenInclude(p => p.Category)
+                            .ThenInclude(c => c.ImageCategories)
+                .ToListAsync();
         }
 
         public async Task<bool> OrderExists(string userId, int id)

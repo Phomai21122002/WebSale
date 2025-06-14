@@ -60,6 +60,8 @@ namespace WebSale.Controllers
 
             if (!owner.ConfirmEmail) {
                 owner.Code = new Random().Next(100000, 999999);
+                Console.WriteLine(owner.Code);
+
                 if (!await _userRepository.UpdateUser(owner)) {
                     status.StatusCode = 500;
                     status.Message = "Something went wrong updating User";
@@ -136,6 +138,7 @@ namespace WebSale.Controllers
                 status.Message = "saving fail";
                 return BadRequest(status);
             }
+            Console.WriteLine(newUser.Code);
 
             var message = new Message(new string[] { userMap.Email }, "Mã xác nhận tài khoản", $"Mã xác nhận của bạn là: {userMap.Code}");
             _emailService.SendEmail(message);

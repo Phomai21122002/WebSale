@@ -21,6 +21,7 @@ namespace WebSale.Interfaces
         Task<Order> CreateOrder(Order order);
         Task<Order> UpdateOrder(Order order);
         Task<bool> DeleteOrder(Order order);
+        Task<bool> DeleteOrders(ICollection<Order> orders);
         Task<bool> Save();
         Task<bool> OrderExists(string userId, int id);
         Task<bool> ProductOfOrderExists(string userId, int orderId, int productId);

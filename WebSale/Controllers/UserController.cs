@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 using WebSale.Dto.Auth;
+using WebSale.Dto.Orders;
 using WebSale.Dto.QueryDto;
 using WebSale.Dto.Users;
 using WebSale.Extensions;
@@ -22,14 +23,24 @@ namespace WebSale.Controllers
         private readonly ILoginRepository _loginRepository;
         private readonly IRoleRepository _roleRepository;
         private readonly ITokenService _tokenService;
+        private readonly ICartRepository _cartRepository;
+        private readonly IOrderRepository _orderRepository;
+        private readonly IOrderProductRepository _orderProductRepository;
+        private readonly IProductDetailRepository _productDetailRepository;
+        private readonly IBillRepository _billRepository;
 
-        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository, IRoleRepository roleRepository, ITokenService tokenService)
+        public UserController(IMapper mapper, IUserRepository userRepository, ILoginRepository loginRepository, IRoleRepository roleRepository, ITokenService tokenService, ICartRepository cartRepository, IOrderRepository orderRepository, IOrderProductRepository orderProductRepository, IProductDetailRepository productDetailRepository, IBillRepository billRepository)
         {
             _mapper = mapper;
             _userRepository = userRepository;
             _loginRepository = loginRepository;
             _roleRepository = roleRepository;
             _tokenService = tokenService;
+            _cartRepository = cartRepository;
+            _orderRepository = orderRepository;
+            _orderProductRepository = orderProductRepository;
+            _productDetailRepository = productDetailRepository;
+            _billRepository = billRepository;
         }
 
         [Authorize]
@@ -217,25 +228,87 @@ namespace WebSale.Controllers
         public async Task<IActionResult> DeleteUser([FromQuery] string userId)
         {
             var status = new Status();
-            var admin = User.FindFirst(ClaimTypes.Role)?.Value;
-            if(admin != "Admin")
-            {
-                status.StatusCode = 403;
-                status.Message = "You do not have permission";
-                return BadRequest(status);
-            }
             if (!await _userRepository.UserExists(userId))
             {
                 status.StatusCode = 402;
                 status.Message = "User not exists";
                 return BadRequest(status);
             }
+
+            var carts = await _cartRepository.GetCarts(userId);
+            if (carts != null && carts.Count > 0)
+            {
+                if (!await _cartRepository.DeleteCarts(carts))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong deleting carts of user";
+                    return BadRequest(status);
+                }
+            }
+
+            var orders = await _orderRepository.GetOrders(userId);
+            if (orders != null && orders.Count > 0)
+            {
+                foreach (var order in orders)
+                {
+                    if(order.Status != (int)OrderStatus.Completed)
+                    {
+                        foreach (var op in order.OrderProducts)
+                        {
+                            if(op.Status != (int)OrderStatus.Cancelled)
+                            {
+                                var productDetail = await _productDetailRepository.GetProductDetail(op.Product.ProductDetailId);
+                                if (productDetail != null)
+                                {
+                                    productDetail.Quantity += op.Quantity;
+                                    productDetail.Sold -= op.Quantity;
+
+                                    if (!await _productDetailRepository.UpdateProductDetail(productDetail))
+                                    {
+                                        status.StatusCode = 500;
+                                        status.Message = "Something went wrong while updating product detail";
+                                        return BadRequest(status);
+                                    }
+                                }
+                            }
+                            var orderProductUpdated = await _orderProductRepository.DeleteOrderProduct(op);
+                            if (orderProductUpdated == null)
+                            {
+                                status.StatusCode = 500;
+                                status.Message = "Something went wrong while deleting order product of user";
+                                return BadRequest(status);
+                            }
+                        }
+                    }
+                }
+            }
+
+            var removeOrders = await _orderRepository.DeleteOrders(orders);
+            if (removeOrders == null)
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong while deleting orders of user";
+                return BadRequest(status);
+            }
+
+            var bills = await _billRepository.GetBills(userId);
+            foreach(var bill in bills)
+            {
+                bill.User = null;
+                if(!await _billRepository.UpdateBill(bill))
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong updating bill";
+                    return BadRequest(status);
+                }
+            }
+
             var user = await _userRepository.GetUser(userId);
 
             if (!await _userRepository.DeleteUser(user))
             {
                 status.StatusCode = 500;
-                status.Message = "Something went wrong updating User";
+                status.Message = "Something went wrong deleting User";
                 return BadRequest(status);
             }
 
