@@ -16,8 +16,6 @@ namespace WebSale.Models
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
         public int Quantity { get; set; }
-        [MaxLength(255)]
-        public string? Tag { get; set; }
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Sold must be non-negative")]
         public int Sold { get; set; }
@@ -44,6 +42,7 @@ namespace WebSale.Models
             string fileName = $"{sanitized}_{uniqueIdentifier}.txt";
 
             string filePath = Path.Combine(DescriptionFolder, fileName);
+            Console.WriteLine(DescriptionDetail);
             File.WriteAllText(filePath, DescriptionDetail ?? "");
 
             DescriptionDetail = fileName;
@@ -51,6 +50,10 @@ namespace WebSale.Models
 
         public string GetDescriptionFromFile()
         {
+            if (string.IsNullOrWhiteSpace(DescriptionFolder) || string.IsNullOrWhiteSpace(DescriptionDetail))
+            {
+                return string.Empty;
+            }
             string filePath = Path.Combine(DescriptionFolder, DescriptionDetail);
 
             if (!File.Exists(filePath))

@@ -95,6 +95,48 @@ namespace WebSale.Respository
             };
         }
 
+        public async Task<ICollection<ResultRatingsDto>> GetRatings()
+        {
+            var users = await _dataContext.Users
+                .Where(u => u.Role != null && u.Role.Name != "Admin")
+                .Select(u => new { u.Id })
+                .ToListAsync();
+
+            var allProductIds = await _dataContext.Products
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            var ratings = await _dataContext.FeedBacks
+                .Where(f => f.Product != null && f.User != null)
+                .GroupBy(f => new { UserId = f.User.Id, ProductId = f.Product.Id })
+                .Select(g => new
+                {
+                    UserId = g.Key.UserId,
+                    ProductId = g.Key.ProductId,
+                    AvgRating = g.Average(f => f.Rate)
+                })
+                .ToListAsync();
+
+            var result = new List<ResultRatingsDto>();
+
+            foreach (var user in users)
+            {
+                foreach (var productId in allProductIds)
+                {
+                    var userRating = ratings.FirstOrDefault(r => r.UserId == user.Id && r.ProductId == productId);
+
+                    result.Add(new ResultRatingsDto
+                    {
+                        UserId = user.Id,
+                        ProductId = productId,
+                        Rating = userRating?.AvgRating ?? 0
+                    });
+                }
+            }
+
+            return result;
+        }
+
         public async Task<bool> Save()
         {
             return await _dataContext.SaveChangesAsync() > 0;

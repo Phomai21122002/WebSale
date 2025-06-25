@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Authentication.Google;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Rewrite;
+using Microsoft.IdentityModel.Tokens;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
@@ -62,11 +63,7 @@ namespace WebSale.Controllers
                 owner.Code = new Random().Next(100000, 999999);
                 Console.WriteLine(owner.Code);
 
-                if (!await _userRepository.UpdateUser(owner)) {
-                    status.StatusCode = 500;
-                    status.Message = "Something went wrong updating User";
-                    return BadRequest(status);
-                }
+                
                 var message = new Message(new string[] { loginDto.Email }, "Mã xác nhận tài khoản", $"Mã xác nhận của bạn là: {owner.Code}");
                 _emailService.SendEmail(message);
 
@@ -87,6 +84,16 @@ namespace WebSale.Controllers
 
             var tokens = _tokenService.GetToken(claims);
             var refreshToken = _tokenService.GetRefreshToken();
+            owner.RefreshToken = refreshToken;
+            owner.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+
+            if (!await _userRepository.UpdateUser(owner))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
+
             var loginSuccess = new
             {
                 isConfirmEmail = owner.ConfirmEmail,
@@ -125,9 +132,8 @@ namespace WebSale.Controllers
             registrationDto.Password = HashPassword.HashPass(registrationDto.Password);
 
             var userMap = _mapper.Map<User>(registrationDto);
-            userMap.url = "";
+            userMap.Url = "";
             userMap.Code = new Random().Next(100000, 999999);
-            userMap.TwoFactorEnabled = true;
             userMap.Role = await _roleRepository.GetRole(idRole);
             userMap.CreatedAt = DateTime.Now;
 
@@ -191,6 +197,64 @@ namespace WebSale.Controllers
             return Ok(true);
         }
 
+        [HttpPost("Refresh")]
+        public async Task<IActionResult> Refresh([FromBody] RefreshRequest request)
+        {
+            var status = new Status();
+
+            if (request == null || string.IsNullOrEmpty(request.ExpiredToken) || string.IsNullOrEmpty(request.RefreshToken))
+            {
+                status.StatusCode = 400;
+                status.Message = "Missing token";
+                return BadRequest(status);
+            }
+
+            ClaimsPrincipal principal;
+
+            try
+            {
+                principal = _tokenService.GetPrincipalFromExpiredToken(request.ExpiredToken);
+            }
+            catch (SecurityTokenException)
+            {
+                status.StatusCode = 401;
+                status.Message = "Invalid expired token";
+                return Unauthorized(status);
+            }
+
+            var email = principal.FindFirstValue(ClaimTypes.Email);
+
+            var user = await _loginRepository.CheckUserByEmail(email);
+            if (user == null || user.RefreshToken != request.RefreshToken || user.RefreshTokenExpiryTime <= DateTime.Now)
+            {
+                status.StatusCode = 403;
+                status.Message = "Invalid refresh token";
+                return Unauthorized(status);
+            }
+
+            var claims = new List<Claim> {
+                new Claim(ClaimTypes.NameIdentifier, user.Id ?? string.Empty),
+                new Claim(ClaimTypes.Email, user.Email ?? string.Empty),
+                new Claim(ClaimTypes.GivenName, user.FirstName ?? string.Empty),
+                new Claim(ClaimTypes.Surname, user.LastName ?? string.Empty),
+                new Claim(ClaimTypes.Role, user.Role?.Name ?? string.Empty),
+            };
+
+            var newToken = _tokenService.GetToken(claims);
+            var newRefreshToken = _tokenService.GetRefreshToken();
+
+            user.RefreshToken = newRefreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+            await _userRepository.UpdateUser(user);
+
+            return Ok(new
+            {
+                token = newToken.Token,
+                refreshToken = newRefreshToken,
+                expiration = newToken.Expiration
+            });
+        }
+
         [HttpPost("confirmCodeResetPassword")]
         public async Task<IActionResult> ConfirmCode([FromQuery] string email, [FromQuery] int code)
         {
@@ -245,15 +309,7 @@ namespace WebSale.Controllers
                 status.Message = "Invalid email and code";
                 return BadRequest(status);
             }
-
             owner.ConfirmEmail = true;
-
-            if (!await _userRepository.UpdateUser(owner))
-            {
-                status.StatusCode = 500;
-                status.Message = "Something went wrong updating User";
-                return BadRequest(status);
-            }
 
             var claims = new List<Claim> {
                 new Claim(ClaimTypes.NameIdentifier, owner.Id ?? string.Empty),
@@ -265,6 +321,16 @@ namespace WebSale.Controllers
 
             var tokens = _tokenService.GetToken(claims);
             var refreshToken = _tokenService.GetRefreshToken();
+
+            owner.RefreshToken = refreshToken;
+            owner.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+
+            if (!await _userRepository.UpdateUser(owner))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
             var loginSuccess = new LoginSuccess
             {
                 Token = tokens.Token,
@@ -331,8 +397,7 @@ namespace WebSale.Controllers
                     Password = password,
                     ConfirmEmail = true,
                     CreatedAt = DateTime.Now,
-                    TwoFactorEnabled = true,
-                    url = "",
+                    Url = "",
                     Phone = "",
                     Code = new Random().Next(100000, 999999),
                     Role = role
@@ -341,7 +406,6 @@ namespace WebSale.Controllers
                 user = await _userRepository.CreateUser(newUser);
                 if (user == null)
                     return Content("<script>window.close();</script>", "text/html");
-
             }
             var claimsToken = new List<Claim>
             {
@@ -354,6 +418,16 @@ namespace WebSale.Controllers
 
             var tokens = _tokenService.GetToken(claimsToken);
             var refreshToken = _tokenService.GetRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+
+            if (!await _userRepository.UpdateUser(user))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
 
             var html = $@"
                 <html>
@@ -395,6 +469,7 @@ namespace WebSale.Controllers
         [HttpGet("facebook-response")]
         public async Task<IActionResult> FacebookResponse([FromQuery] string returnUrl = "/")
         {
+            var status = new Status();
             var result = await HttpContext.AuthenticateAsync(FacebookDefaults.AuthenticationScheme);
 
             if (!result.Succeeded || result.Principal == null)
@@ -427,9 +502,8 @@ namespace WebSale.Controllers
                     Password = password,
                     ConfirmEmail = true,
                     CreatedAt = DateTime.Now,
-                    TwoFactorEnabled = true,
                     Code = new Random().Next(100000, 999999),
-                    url = "",
+                    Url = "",
                     Phone = "",
                     Role = role
                 };
@@ -450,6 +524,16 @@ namespace WebSale.Controllers
 
             var tokens = _tokenService.GetToken(claimsToken);
             var refreshToken = _tokenService.GetRefreshToken();
+
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = DateTime.Now.AddDays(7);
+
+            if (!await _userRepository.UpdateUser(user))
+            {
+                status.StatusCode = 500;
+                status.Message = "Something went wrong updating User";
+                return BadRequest(status);
+            }
 
             var html = $@"
                 <html>

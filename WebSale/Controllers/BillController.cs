@@ -95,7 +95,7 @@ namespace WebSale.Controllers
         }
 
         [HttpGet("admin/bills")]
-        public async Task<IActionResult> GetAdminBills([FromQuery] QueryPaginationDto queryPaginationDto)
+        public async Task<IActionResult> GetAdminBills([FromQuery] QueryFindPaginationDto queryPaginationDto)
         {
             var status = new Status();
             try

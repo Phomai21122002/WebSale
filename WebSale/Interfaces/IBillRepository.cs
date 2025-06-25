@@ -10,7 +10,7 @@ namespace WebSale.Interfaces
         Task<ICollection<Bill>> GetBills(string userId);
         Task<BillResultDto> GetResultBillByUserId(string userId, int billId);
         Task<PageResult<BillResultDto>> GetResultsBillByUserId(string userId, QueryPaginationDto queryPaginationDto);
-        Task<PageResult<BillResultDto>> GetResultsBill(QueryPaginationDto queryPaginationDto);
+        Task<PageResult<BillResultDto>> GetResultsBill(QueryFindPaginationDto queryFindPaginationDto);
         Task<double?> TotalSales();
         Task<Bill> CreateBill(Bill bill);
         Task<bool> UpdateBill(Bill bill);

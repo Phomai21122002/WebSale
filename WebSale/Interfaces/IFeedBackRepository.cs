@@ -9,6 +9,7 @@ namespace WebSale.Interfaces
     public interface IFeedBackRepository
     {
         Task<PageResult<ResultFeedbacksDto>> GetFeedBacks(int productId, QueryPaginationDto queryPaginationDto);
+        Task<ICollection<ResultRatingsDto>> GetRatings();
         Task<FeedBack?> GetFeedBackByFeedBackId(string userId, int feedbackId);
         Task<FeedBack?> GetFeedBack(int productId, int feedbackId);
         Task<FeedBack> CreateFeedBack(FeedBack feedback);

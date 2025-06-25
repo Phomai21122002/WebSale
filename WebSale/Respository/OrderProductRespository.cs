@@ -107,7 +107,7 @@ namespace WebSale.Respository
                     LastName = op.Order.User.LastName,
                     Email = op.Order.User.Email,
                     Phone = op.Order.User.Phone,
-                    url = op.Order.User.url
+                    Url = op.Order.User.Url
                 },
                 Product = new ProductOrderResultDto
                 {
@@ -119,7 +119,6 @@ namespace WebSale.Respository
                     Slug = op.Product.Slug,
                     Description = op.Product.ProductDetail?.Description,
                     Sold = op.Product.ProductDetail?.Sold ?? 0,
-                    Tag = op.Product.ProductDetail?.Tag,
                     ExpiryDate = op.Product.ProductDetail?.ExpiryDate,
                     Status = op.Status,
                     Urls = op.Product.ImageProducts?.Select(ip => ip.Url).ToList() ?? new List<string>(),

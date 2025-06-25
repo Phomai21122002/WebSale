@@ -97,7 +97,7 @@ namespace WebSale.Respository
                 FirstName = u.FirstName,
                 LastName = u.LastName,
                 Phone = u.Phone,
-                url = u.url,
+                Url = u.Url,
                 Addresses = u.UserAddresses?.Where(ud => ud.Address != null)
                         .Select(ud => new AddressDto
                         {
@@ -146,7 +146,7 @@ namespace WebSale.Respository
                     FirstName = u.FirstName,
                     LastName = u.LastName,
                     Phone = u.Phone,
-                    url = u.url,
+                    Url = u.Url,
                     Addresses = u.UserAddresses!
                         .Select(ud => new AddressDto
                         {

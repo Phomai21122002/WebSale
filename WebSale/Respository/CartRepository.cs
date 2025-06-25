@@ -98,7 +98,6 @@ namespace WebSale.Respository
                     Description = cartRes.Product?.ProductDetail?.Description,
                     DescriptionDetail = cartRes.Product?.ProductDetail?.GetDescriptionFromFile(),
                     Quantity = cartRes.Quantity,
-                    Tag = cartRes.Product?.ProductDetail?.Tag,
                     Sold = cartRes.Product?.ProductDetail?.Sold ?? 0,
                     Slug = cartRes.Product.Slug
                 },
@@ -153,7 +152,6 @@ namespace WebSale.Respository
                     DescriptionDetail = cp.Product?.ProductDetail?.GetDescriptionFromFile(),
                     Quantity = cp.Product?.ProductDetail?.Quantity,
                     Count = cp.Quantity,
-                    Tag = cp.Product?.ProductDetail?.Tag,
                     Sold = cp.Product?.ProductDetail?.Sold ?? 0,
                     Slug = cp.Product.Slug
                 },

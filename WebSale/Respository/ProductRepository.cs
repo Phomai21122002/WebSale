@@ -104,11 +104,11 @@ namespace WebSale.Respository
                 Description = p.ProductDetail?.Description,
                 DescriptionDetail = p.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = p.ProductDetail?.Quantity ?? 0,
-                Tag = p.ProductDetail?.Tag,
                 Sold = p.ProductDetail?.Sold ?? 0,
                 Slug = p.Slug,
                 ExpiryDate = p.ProductDetail?.ExpiryDate,
                 IsDeleted = p.IsDeleted,
+                CreateDate = p.CreatedAt,
                 category = p.Category == null ? null : new CategoryDto
                 {
                     Id = p.Category.Id,
@@ -162,7 +162,6 @@ namespace WebSale.Respository
                 Description = resProduct.ProductDetail?.Description,
                 DescriptionDetail = resProduct.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = resProduct.ProductDetail?.Quantity ?? 0,
-                Tag = resProduct.ProductDetail?.Tag,
                 Sold = resProduct.ProductDetail?.Sold ?? 0,
                 Slug = resProduct.Slug,
                 ExpiryDate = resProduct.ProductDetail?.ExpiryDate,
@@ -223,10 +222,10 @@ namespace WebSale.Respository
                 Description = resProduct?.ProductDetail?.Description,
                 DescriptionDetail = resProduct?.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = resProduct?.ProductDetail?.Quantity ?? 0,
-                Tag = resProduct?.ProductDetail?.Tag,
                 Sold = resProduct?.ProductDetail?.Sold ?? 0,
                 Slug = resProduct?.Slug,
                 ExpiryDate = resProduct?.ProductDetail?.ExpiryDate,
+                CreateDate = resProduct?.CreatedAt,
                 category = resProduct?.Category == null ? null : new CategoryDto
                 {
                     Id = resProduct.Category.Id,
@@ -271,7 +270,6 @@ namespace WebSale.Respository
                 Description = resProduct.ProductDetail?.Description,
                 DescriptionDetail = resProduct.ProductDetail?.GetDescriptionFromFile(),
                 Quantity = resProduct.ProductDetail?.Quantity ?? 0,
-                Tag = resProduct.ProductDetail?.Tag,
                 Sold = resProduct.ProductDetail?.Sold ?? 0,
                 Slug = resProduct.Slug,
                 ExpiryDate = resProduct.ProductDetail?.ExpiryDate,

@@ -604,10 +604,6 @@ namespace WebSale.Migrations
                     b.Property<int>("Sold")
                         .HasColumnType("int");
 
-                    b.Property<string>("Tag")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
@@ -720,16 +716,20 @@ namespace WebSale.Migrations
                     b.Property<string>("Phone")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("RefreshToken")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<DateTime>("RefreshTokenExpiryTime")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
-
-                    b.Property<bool>("TwoFactorEnabled")
-                        .HasColumnType("bit");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("url")
+                    b.Property<string>("Url")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

@@ -11,8 +11,7 @@ namespace WebSale.Dto.ProductDetails
         [Required]
         [Range(0, int.MaxValue, ErrorMessage = "Quantity must be non-negative")]
         public int? Quantity { get; set; }
-        [MaxLength(255)]
-        public string? Tag { get; set; }
         public DateTime? ExpiryDate { get; set; }
+        public DateTime? CreateDate { get; set; }
     }
 }

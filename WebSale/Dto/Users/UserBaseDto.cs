@@ -16,7 +16,7 @@ namespace WebSale.Dto.Users
         [Phone]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
         public string? Phone { get; set; }
-        public string? url { get; set; }
+        public string? Url { get; set; }
 
     }
 }

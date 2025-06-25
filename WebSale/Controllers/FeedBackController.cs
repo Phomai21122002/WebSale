@@ -77,6 +77,7 @@ namespace WebSale.Controllers
             try
             {
                 var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+               
                 if (userId != inputUserId)
                 {
                     status.StatusCode = 400;
@@ -85,6 +86,29 @@ namespace WebSale.Controllers
                 }
 
                 var feedbacks = await _feedBackRepository.GetFeedBacks(productId, queryPaginationDto);
+                if (feedbacks == null)
+                {
+                    status.StatusCode = 500;
+                    status.Message = "Something went wrong while getting order of user";
+                    return BadRequest(status);
+                }
+                return Ok(feedbacks);
+            }
+            catch (Exception ex)
+            {
+                status.StatusCode = 500;
+                status.Message = $"Internal Server Error: {ex.Message}";
+                return BadRequest(status);
+            }
+        }
+
+        [HttpGet("ratings")]
+        public async Task<IActionResult> GetRatings()
+        {
+            var status = new Status();
+            try
+            {
+                var feedbacks = await _feedBackRepository.GetRatings();
                 if (feedbacks == null)
                 {
                     status.StatusCode = 500;

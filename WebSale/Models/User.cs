@@ -21,14 +21,16 @@ namespace WebSale.Models
         [StringLength(255)]
         public string? Password { get; set; }
         [Required]
-        public string? url { get; set; }
+        public string? Url { get; set; }
         [Phone]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
         public string? Phone { get; set; }
         public bool ConfirmEmail { get; set; } = false;
         [Range(100000, 999999, ErrorMessage = "Code phải là số có 6 chữ số")]
         public int Code { get; set; }
-        public bool TwoFactorEnabled { get; set; } = false;
+        [StringLength(255)]
+        public string? RefreshToken { get; set; }
+        public DateTime RefreshTokenExpiryTime { get; set; }
         public ICollection<UserAddress>? UserAddresses { get; set; }
         public ICollection<Cart>? Carts { get; set; }
         public ICollection<Order>? Orders { get; set; }

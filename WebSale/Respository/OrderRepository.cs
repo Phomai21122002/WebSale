@@ -123,7 +123,7 @@ namespace WebSale.Respository
                     LastName = order.User.LastName,
                     Email = order.User.Email,
                     Phone = order.User.Phone,
-                    url = order.User.url,
+                    Url = order.User.Url,
                     Addresses = order.User.UserAddresses!.Select(ud => new AddressDto
                     {
                         Id = ud!.Address!.Id,
@@ -142,7 +142,6 @@ namespace WebSale.Respository
                     Slug = op.Product.Slug,
                     Description = op.Product.ProductDetail?.Description,
                     Sold = op.Product.ProductDetail?.Sold ?? 0,
-                    Tag = op.Product.ProductDetail?.Tag,
                     ExpiryDate = op.Product.ProductDetail?.ExpiryDate,
                     Status = op.Status,
                     Urls = op.Product.ImageProducts != null
@@ -225,7 +224,7 @@ namespace WebSale.Respository
                     FirstName = order.User.FirstName,
                     LastName = order.User.LastName,
                     Phone = order.User.Phone,
-                    url = order.User.url,
+                    Url = order.User.Url,
                     Addresses = order.User.UserAddresses!
                     .Select(ud => new AddressDto
                     {
@@ -321,7 +320,7 @@ namespace WebSale.Respository
                     FirstName = order.User.FirstName,
                     LastName = order.User.LastName,
                     Phone = order.User.Phone,
-                    url = order.User.url,
+                    Url = order.User.Url,
                     Addresses = order.User.UserAddresses!
                     .Select(ud => new AddressDto
                     {

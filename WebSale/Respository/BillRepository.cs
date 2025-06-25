@@ -98,7 +98,7 @@ namespace WebSale.Respository
                     FirstName = bill.User?.FirstName,
                     LastName = bill.User?.LastName,
                     Phone = bill.User?.Phone,
-                    url = bill.User?.url,
+                    Url = bill.User?.Url,
                     Addresses = bill.User?.UserAddresses!
                         .Select(ud => new AddressDto
                         {
@@ -113,7 +113,7 @@ namespace WebSale.Respository
             return resultBill;
         }
 
-        public async Task<PageResult<BillResultDto>> GetResultsBill(QueryPaginationDto queryPaginationDto)
+        public async Task<PageResult<BillResultDto>> GetResultsBill(QueryFindPaginationDto queryFindPaginationDto)
         {
             var query = _dataContext.Bills
                 .Include(b => b.User)
@@ -121,16 +121,23 @@ namespace WebSale.Respository
                 .AsQueryable();
 
             var totalCount = await query.CountAsync();
+            var bills = await query.ToListAsync();
 
-
-            if (queryPaginationDto.PageNumber > 0 && queryPaginationDto.PageSize > 0)
+            if (!string.IsNullOrEmpty(queryFindPaginationDto.Name))
             {
-                query = query
-                    .Skip((queryPaginationDto.PageNumber - 1) * queryPaginationDto.PageSize)
-                    .Take(queryPaginationDto.PageSize);
+                var keyword = RemoveDiacritics.RemoveDiacriticsChar(queryFindPaginationDto.Name.ToLower());
+                bills = bills.Where(p =>
+                    !string.IsNullOrEmpty(p.NameOrder) &&
+                     RemoveDiacritics.RemoveDiacriticsChar(p.NameOrder.ToLower()).Contains(keyword)).ToList();
             }
 
-            var bills = await query.ToListAsync();
+            if (queryFindPaginationDto.PageNumber > 0 && queryFindPaginationDto.PageSize > 0)
+            {
+                bills = bills
+                    .Skip((queryFindPaginationDto.PageNumber - 1) * queryFindPaginationDto.PageSize)
+                    .Take(queryFindPaginationDto.PageSize)
+                    .ToList();
+            }
 
             var resultBills = bills.Select(b => new BillResultDto {
                 Id = b.Id,
@@ -145,8 +152,8 @@ namespace WebSale.Respository
             return new PageResult<BillResultDto>
             {
                 TotalCount = totalCount,
-                PageNumber = queryPaginationDto.PageNumber,
-                PageSize = queryPaginationDto.PageSize,
+                PageNumber = queryFindPaginationDto.PageNumber,
+                PageSize = queryFindPaginationDto.PageSize,
                 Datas = resultBills
             };
         }

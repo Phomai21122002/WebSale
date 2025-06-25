@@ -54,7 +54,7 @@ namespace WebSale.Respository
             var token = new JwtSecurityToken(
                 issuer: _configuration["JWT:ValidIssuer"],
                 audience: _configuration["JWT:ValidAudience"],
-                expires: DateTime.Now.AddDays(7),
+                expires: DateTime.Now.AddMinutes(10),
                 claims: claim,
                 signingCredentials: new SigningCredentials(authSigningKey, SecurityAlgorithms.HmacSha256)
                 );

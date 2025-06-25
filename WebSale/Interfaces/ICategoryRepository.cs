@@ -6,6 +6,7 @@ namespace WebSale.Interfaces
     public interface ICategoryRepository
     {
         Task<ICollection<CategoryResultDto>> GetCategories();
+        Task<ICollection<TotalSoldProductInCategory>> GetTotalSoldProductInCategory();
         Task<Category?> GetCategory(int id);
         Task<int?> TotalCategory();
         Task<Category> CreateCategory(Category category);

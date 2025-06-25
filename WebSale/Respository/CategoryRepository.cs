@@ -82,5 +82,18 @@ namespace WebSale.Respository
             int count = await _dataContext.Categories.Where(c => !c.IsDeleted).CountAsync();
             return count;
         }
+
+        public Task<ICollection<TotalSoldProductInCategory>> GetTotalSoldProductInCategory()
+        {
+            var result = _dataContext.Categories.Select(category => new TotalSoldProductInCategory
+            {
+                Name = category.Name,
+                Sold = category.Products.Sum(product =>
+                   ((int?)product.ProductDetail.Sold ?? 0) * product.Price
+                )
+            }).ToList();
+
+            return Task.FromResult((ICollection<TotalSoldProductInCategory>)result);
+        }
     }
 }

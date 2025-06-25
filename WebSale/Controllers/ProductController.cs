@@ -107,6 +107,7 @@ namespace WebSale.Controllers
 
                 var productDetail = _mapper.Map<ProductDetail>(productDetailDto);
                 productDetail.Sold = 0;
+                productDetail.DescriptionDetail = productDetailDto.DescriptionDetail;
                 productDetail.SaveDescriptionToFile();
 
                 var newProductDetail = await _productDetailRepository.CreateProductDetail(productDetail);
@@ -124,6 +125,7 @@ namespace WebSale.Controllers
                 product.ProductDetail = newProductDetail;
                 product.Category = category;
                 product.ProductDetailId = newProductDetail.Id;
+                product.CreatedAt = DateTime.Now;
                 product.GenerateSlug();
                 if (await _productRepository.SlugExists(product.Slug))
                 {
@@ -187,6 +189,7 @@ namespace WebSale.Controllers
                     product.Category = category;
                 }
                 product.GenerateSlug();
+                product.UpdatedAt = DateTime.Now;
 
                 if (!await _productRepository.UpdateProduct(product))
                 {

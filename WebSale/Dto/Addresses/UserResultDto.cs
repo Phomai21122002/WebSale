@@ -19,7 +19,7 @@ namespace WebSale.Dto.Addresses
         [StringLength(100)]
         public string? LastName { get; set; }
         [Required]
-        public string? url { get; set; }
+        public string? Url { get; set; }
         [Phone]
         [RegularExpression(@"^\d{10}$", ErrorMessage = "Số điện thoại phải gồm đúng 10 chữ số")]
         public string? Phone { get; set; }

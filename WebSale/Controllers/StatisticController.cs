@@ -84,5 +84,19 @@ namespace WebSale.Controllers
                 return StatusCode(500, new { message = "Internal server error", error = ex.Message });
             }
         }
+
+        [HttpGet("total-sold-category")]
+        public async Task<IActionResult> GetTotalSoldCategory()
+        {
+            try
+            {
+                var data = await _categoryRepository.GetTotalSoldProductInCategory();
+                return Ok(data);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "Internal server error", error = ex.Message });
+            }
+        }
     }
 }
